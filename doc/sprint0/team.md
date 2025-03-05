@@ -2,9 +2,9 @@
 | 
 |---------------------|--------|------------|------------------|---------------------|-----------------
 |
-|Nathan Li-How-Cheong |N       |219711738   |nlhc4@my.yorku.ca |Email                |Nathan 
+|Nathan Li-How-Cheong |N       |219711738  |nlhc4@my.yorku.ca   |Email                |Nathan 
 |
-|                     |        |            |                  |                     | 
+|Manavkumar Shah      |N       |219935592  |manav30@my.yorku.ca |Email                |manav9847 
 |
 |                     |        |            |                  |                     | 
 |
