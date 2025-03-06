@@ -8,10 +8,9 @@
 |
 |Brett Omoto          |N       |219728021   |brett.omoto91@gmail.com|Email                |Brett (doncheadle91) 
 |
-|                     |        |            |                       |                     | 
+|Quan Pham            |N       |220496873   |qpham21@my.yorku.ca    |Email                |Quan (NMD_L3AD3R) 
 |
-|                     |        |            |                       |                     | 
-|
+
 
 ---
                 
