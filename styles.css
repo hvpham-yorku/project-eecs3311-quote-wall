@@ -1,0 +1,47 @@
+html, body {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    font-family: Trebuchet MS;
+}
+
+.header {
+    background-color:crimson;
+    color: black;
+    padding: 50px 30px;
+    text-align: center;
+    position: relative;
+}
+
+select[multiple] {
+    width: 100px;
+    height: 150px;
+    background-color: #f2f2f2;
+    border: 2px solid crimson;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 15px;
+    color: black;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+    overflow-y: scroll;
+}
+
+button {
+    background-color: crimson;  
+    color: black;
+    padding: 7px 10px;
+    border: 2px solid crimson; 
+    border-radius: 5px; 
+    font-size: 17px;
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+    transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: rgb(155, 35, 59)
+}
