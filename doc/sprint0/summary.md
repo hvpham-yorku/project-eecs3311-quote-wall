@@ -5,7 +5,7 @@
 # Summary: #
 
 ## Objective: ##
-Develop a website that allows the user to select one or more from a list of various interests (sports, film & tv, gaming, etc.). The website will then display a quote or inspirational message along with an accompanying image from one of their selected interests. The quotes appear on a fully customizable schedule, allowing the user to choose how often the quotes change, and how they appear on the screen, among other things.
+Develop a website that allows the user to select one or more from a list of various interests (sports, film & tv, gaming, etc.). The website will then display a quote or inspirational message along with an accompanying image of a landscape or scenery. The quotes appear on a fully customizable schedule, allowing the user to choose how often the quotes change, and how they appear on the screen, among other things.
 
 ## Key Personas: ##
 As this is a website, the target audience is people who work for long periods on their laptops or computers, people who are unispired in doing something, and people who lose motivation and face depression.
