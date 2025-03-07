@@ -26,9 +26,9 @@
   - As Bart
     > I want to be able to choose how my content is displayed to me, including the size of the text and the coloring of the interface.
 
-### 4. Relevant Imagery ###
+### 4. Soothing Imagery ###
   - As Diana
-    > I want quotes to be accompanied by a relevant image, such as a picture of the person the quote originates from.
+    > I want quotes to be accompanied by a relaxing or visually pleasing image, something nice to accompany the quote.
 
 # Backend: #
 
