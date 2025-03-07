@@ -12,6 +12,9 @@
   - As Bart
     > I need to be able to quickly access and set up the website so I can get back to work. I do not want to get lost in a sea of buttons and menus.
 
+  - As Diana
+    > Buttons and menus should clearly indicate their purpose and should be designed intuitively.
+
 ### 3. Accessibility Options ###
   - As Diana
     > I want to be able to choose between a light and dark mode for the user interface, to better suit my viewing in a high or low lighting environment.
@@ -23,11 +26,17 @@
   - As Bart
     > When glancing at the website, I don't want to be distracted by buttons  or unnecessary text. I want a toggle for menu or UI elements so the main focus can be on the quote.
 
+  - As Diana
+    > I want the design and user interface to be as unobtrusive and non-distracting as possible. The website's purpose is to add spice to your day, not to occupy a great deal of your time.
+
 # Frontend: #
 
 ### 1. Selection of Interests ###
   - As Bart
-    > I want the quotes that appear to be tailored to my own interests; and to be from a wide range of people and topics I know.
+    > I want the quotes that appear to be tailored to my interests; and to be from a wide range of people and topics I know.
+
+  - As Diana
+    > I want the option to add new interests, or to edit any of my existing preferences.
 
 ### 2. Personalized Scheduling ###
   - As Diana
@@ -36,6 +45,9 @@
 ### 3. Customizable Interface ###
   - As Bart
     > I want to be able to choose how my content is displayed to me, including the size and positioning of the text.
+
+  - As Diana
+    > I want to be able to choose how quotes are cycled. Whether it is a hard change, fade, or another type of transition.
 
 ### 4. Soothing Imagery ###
   - As Diana
