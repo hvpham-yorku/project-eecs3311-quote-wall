@@ -1,14 +1,25 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-import os
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import mapped_column
+from sqlalchemy import Integer, String
 from dotenv import load_dotenv
 
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URI = os.getenv("DATABASE_URI")
 
-db = SQLAlchemy()
+class Base(DeclarativeBase):
+    pass
+
+db = SQLAlchemy(model_class = Base)
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = SECRET_KEY
 
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 db.init_app(app)
-print("Hello World")
+
+class User(db.Model):
+    email = mapped_column(String, primary_key = True)
+
+with app.app_context():
+    db.create_all()
