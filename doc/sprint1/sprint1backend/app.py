@@ -1,5 +1,5 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings
+import os, sqlalchemy, warnings, requests
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relationship
@@ -13,6 +13,7 @@ warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 ### LOAD ENVIRONMENT VARIABLES FROM .ENV ##########################################################
 load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
+api_key = os.getenv("API_KEY")
 
 class Base(DeclarativeBase):
     pass
@@ -132,6 +133,27 @@ def removeUser():
         session.commit()
     else:
         print("[/remove-user] User Does not Exist in Database")
+
+@app.route("/user-quote/<email>", methods = ["GET"])
+def getQuote(email):
+    Session = sessionmaker(bind = engine)
+    session = Session()
+
+    userGenres = session.query(Genres).filter_by(email = email).first()
+    if not userGenres:
+        print("User is not found")
+    
+    genre = userGenres.genreOne or userGenres.genreTwo or userGenres.genreThree
+    if not genre:
+        print("No genres selected")
+
+    api_url = 'https://api.api-ninjas.com/v1/quotes'
+    response = requests.get(api_url, headers={'X-Api-Key' : api_key})
+
+    if response.status_code == requests.codes.ok:
+        print(response.text)
+    else:
+        print("Error:", response.status_code, response.text)
 
 #addUser()
 #addGenres()
