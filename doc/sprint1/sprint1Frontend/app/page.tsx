@@ -1,34 +1,63 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { BookOpen, Film, Gamepad2, Leaf, Music, Microscope, ChevronRight } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {BookText,
+  Brain,
+  ChevronRight,
+  Clock,
+  Cpu,
+  Film,
+  Gamepad2,
+  HeartPulse,
+  LandPlot,
+  Leaf,
+  Microscope,
+  Music,
+  Trophy,
+  ChevronDown,
+  ChevronUp} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import ThemeToggle from "@/components/theme-toggle"
-import BackgroundSelector from "@/components/background-selector"
-import SettingsPanel from "@/components/settings-panel"
-import AuthButton from "@/components/auth-button"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import ThemeToggle from "@/components/theme-toggle";
+import BackgroundSelector from "@/components/background-selector";
+import SettingsPanel from "@/components/settings-panel";
+import AuthButton from "@/components/auth-button";
 
-const genres = [
-  { id: "sport", name: "Sport", icon: BookOpen },
+const allGenres = [
+  { id: "philosophy", name: "Philosophy", icon: Brain },
+  { id: "technology", name: "Technology", icon: Cpu },
+  { id: "history", name: "History", icon: Clock },
+  { id: "literature", name: "Literature", icon: BookText },
+  { id: "psychology", name: "Psychology", icon: HeartPulse },
+  { id: "politics", name: "Politics", icon: LandPlot },
+  { id: "sport", name: "Sport", icon: Trophy },
   { id: "movie", name: "Movie", icon: Film },
   { id: "music", name: "Music", icon: Music },
   { id: "science", name: "Science", icon: Microscope },
   { id: "videogames", name: "Video Games", icon: Gamepad2 },
   { id: "nature", name: "Nature", icon: Leaf },
-]
+];
 
 export default function HomePage() {
-  const router = useRouter()
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
+  const router = useRouter();
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]); // Store multiple selected genres
+  const [showMore, setShowMore] = useState(false);
+
+  const toggleGenreSelection = (id: string) => {
+    setSelectedGenres((prevSelected) =>
+      prevSelected.includes(id)
+        ? prevSelected.filter((genre) => genre !== id) // Remove if already selected
+        : [...prevSelected, id] // Add if not selected
+    );
+  };
 
   const handleContinue = () => {
-    if (selectedGenre) {
-      router.push(`/quotes?genre=${selectedGenre}`)
+    if (selectedGenres.length > 0) {
+      router.push(`/quotes?genres=${selectedGenres.join(",")}`);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,11 +69,7 @@ export default function HomePage() {
           </h1>
           <div className="flex items-center gap-2">
             <AuthButton />
-            <SettingsPanel getNewQuote={function (): void {
-              throw new Error("Function not implemented.")
-            } } setFloatingEnabled={function (value: boolean): void {
-              throw new Error("Function not implemented.")
-            } } />
+            {/* <SettingsPanel getNewQuote={() => {}} setFloatingEnabled={() => {}} /> */}
             <ThemeToggle />
           </div>
         </div>
@@ -57,38 +82,81 @@ export default function HomePage() {
             The QuoteWall
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-            Discover inspiring quotes from various genres to motivate and inspire your day
+            Discover inspiring quotes from various genres to motivate and inspire your day.
           </p>
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Select a Genre</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Select Genres</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {genres.map((genre) => {
-              const Icon = genre.icon
+            {allGenres.slice(0, 6).map((genre) => {
+              const Icon = genre.icon;
               return (
                 <Card
                   key={genre.id}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-md ${
-                    selectedGenre === genre.id
+                    selectedGenres.includes(genre.id)
                       ? "border-primary bg-primary/5 dark:bg-primary/10"
                       : "hover:border-primary/50"
                   }`}
-                  onClick={() => setSelectedGenre(genre.id)}
+                  onClick={() => toggleGenreSelection(genre.id)}
                 >
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                     <Icon
                       className={`h-8 w-8 mb-2 ${
-                        selectedGenre === genre.id ? "text-primary" : "text-muted-foreground"
+                        selectedGenres.includes(genre.id) ? "text-primary" : "text-muted-foreground"
                       }`}
                     />
-                    <h3 className={`font-medium ${selectedGenre === genre.id ? "text-primary font-semibold" : ""}`}>
+                    <h3 className={`font-medium ${selectedGenres.includes(genre.id) ? "text-primary font-semibold" : ""}`}>
                       {genre.name}
                     </h3>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
+          </div>
+
+          {/* Show More Section */}
+          {showMore && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              {allGenres.slice(6).map((genre) => {
+                const Icon = genre.icon;
+                return (
+                  <Card
+                    key={genre.id}
+                    className={`cursor-pointer transition-all duration-300 hover:shadow-md ${
+                      selectedGenres.includes(genre.id)
+                        ? "border-primary bg-primary/5 dark:bg-primary/10"
+                        : "hover:border-primary/50"
+                    }`}
+                    onClick={() => toggleGenreSelection(genre.id)}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+                      <Icon
+                        className={`h-8 w-8 mb-2 ${
+                          selectedGenres.includes(genre.id) ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      />
+                      <h3 className={`font-medium ${selectedGenres.includes(genre.id) ? "text-primary font-semibold" : ""}`}>
+                        {genre.name}
+                      </h3>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Show More Button */}
+          <div className="flex justify-center mt-6">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setShowMore(!showMore)}
+              className="px-6 py-4 text-lg flex items-center"
+            >
+            {showMore ? "Show Less" : "Show More"} 
+            {showMore ? <ChevronUp className="ml-2 h-5 w-5" /> : <ChevronDown className="ml-2 h-5 w-5" />}            </Button>
           </div>
         </div>
 
@@ -96,7 +164,7 @@ export default function HomePage() {
           <Button
             size="lg"
             onClick={handleContinue}
-            disabled={!selectedGenre}
+            disabled={selectedGenres.length === 0}
             className="px-8 py-6 text-lg rounded-full transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700"
           >
             Continue <ChevronRight className="ml-2 h-5 w-5" />
@@ -111,6 +179,5 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

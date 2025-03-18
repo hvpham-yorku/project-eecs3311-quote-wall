@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo  } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
@@ -53,83 +53,120 @@ const quotesByGenre: Record<string, { text: string; author: string }[]> = {
     { text: "In every walk with nature one receives far more than he seeks.", author: "John Muir" },
     { text: "The clearest way into the Universe is through a forest wilderness.", author: "John Muir" },
   ],
+  philosophy: [
+    { text: "The unexamined life is not worth living.", author: "Socrates" },
+    { text: "I think, therefore I am.", author: "René Descartes" },
+    { text: "He who has a why to live can bear almost any how.", author: "Friedrich Nietzsche" },
+  ],
+  technology: [
+    { text: "Any sufficiently advanced technology is indistinguishable from magic.", author: "Arthur C. Clarke" },
+    { text: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" },
+    {
+      text: "The advance of technology is based on making it fit in so that you don't really even notice it, so it's part of everyday life.",
+      author: "Bill Gates",
+    },
+  ],
+  history: [
+    { text: "Those who cannot remember the past are condemned to repeat it.", author: "George Santayana" },
+    { text: "History is written by the victors.", author: "Winston Churchill" },
+    { text: "The farther backward you can look, the farther forward you can see.", author: "Winston Churchill" },
+  ],
+  literature: [
+    {
+      text: "A reader lives a thousand lives before he dies. The man who never reads lives only one.",
+      author: "George R.R. Martin",
+    },
+    { text: "Books are a uniquely portable magic.", author: "Stephen King" },
+    { text: "That's the thing about books. They let you travel without moving your feet.", author: "Jhumpa Lahiri" },
+  ],
+  psychology: [
+    { text: "The mind is not a vessel to be filled, but a fire to be kindled.", author: "Plutarch" },
+    { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+    {
+      text: "The only person you are destined to become is the person you decide to be.",
+      author: "Ralph Waldo Emerson",
+    },
+  ],
+  politics: [
+    {
+      text: "In politics, nothing happens by accident. If it happens, you can bet it was planned that way.",
+      author: "Franklin D. Roosevelt",
+    },
+    {
+      text: "Politics is the art of looking for trouble, finding it everywhere, diagnosing it incorrectly and applying the wrong remedies.",
+      author: "Groucho Marx",
+    },
+    { text: "The ballot is stronger than the bullet.", author: "Abraham Lincoln" },
+  ],
 }
 
 export default function QuotesPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const genre = searchParams.get("genre") || "sport"
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [currentTime, setCurrentTime] = useState("")
-  const [currentQuote, setCurrentQuote] = useState<{ text: string; author: string } | null>(null)
-  const [isChanging, setIsChanging] = useState(false)
+  // **Fix: Ensure selectedGenres is always an array**
+  const selectedGenres = useMemo(
+    () => searchParams.get("genres")?.split(",") || ["sport"],
+    [searchParams]
+  );
+
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentQuote, setCurrentQuote] = useState<{ text: string; author: string } | null>(null);
+  const [isChanging, setIsChanging] = useState(false);
   const [floatingEnabled, setFloatingEnabled] = useState(true);
   const { data: session, status } = useSession();
 
-  // Redirect unauthenticated users
+  // **Fix: Ensure hooks always run in the same order**
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace("/auth"); // Use replace() to prevent back navigation to the protected page
+      router.replace("/auth");
     }
   }, [status, router]);
 
-  // Prevent rendering before session is checked
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-center text-lg font-medium">Loading...</p>
-      </div>
-    );
-  }
-
-  // Update time every minute
   useEffect(() => {
     const updateTime = () => {
-      const now = new Date()
-      setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
-    }
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    };
 
-    updateTime()
-    const interval = setInterval(updateTime, 60000)
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
-    return () => clearInterval(interval)
-  }, [])
+  // **Fix: Use useMemo to avoid unnecessary re-renders**
+  const mergedQuotes = useMemo(
+    () => selectedGenres.flatMap((genre) => quotesByGenre[genre] || []),
+    [selectedGenres]
+  );
 
-  // Set initial quote
   useEffect(() => {
-    if (genre && quotesByGenre[genre]) {
-      const randomIndex = Math.floor(Math.random() * quotesByGenre[genre].length)
-      setCurrentQuote(quotesByGenre[genre][randomIndex])
+    if (mergedQuotes.length > 0) {
+      setCurrentQuote(mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)]);
     }
-  }, [genre])
+  }, [mergedQuotes]);
 
   const getNewQuote = () => {
-    if (!genre || !quotesByGenre[genre]) return
-
-    setIsChanging(true)
+    if (mergedQuotes.length === 0) return;
+    setIsChanging(true);
 
     setTimeout(() => {
-      let randomIndex
-      let newQuote
-
-      // Make sure we don't get the same quote twice in a row
+      let newQuote;
       do {
-        randomIndex = Math.floor(Math.random() * quotesByGenre[genre].length)
-        newQuote = quotesByGenre[genre][randomIndex]
-      } while (newQuote?.text === currentQuote?.text && quotesByGenre[genre].length > 1)
+        newQuote = mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)];
+      } while (newQuote?.text === currentQuote?.text && mergedQuotes.length > 1);
 
-      setCurrentQuote(newQuote)
-      setIsChanging(false)
-    }, 500)
-  }
+      setCurrentQuote(newQuote);
+      setIsChanging(false);
+    }, 500);
+  };
 
   const goBack = () => {
-    router.push("/")
-  }
+    router.push("/");
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-10">
         <div className="container max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -151,18 +188,21 @@ export default function QuotesPage() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
-      <CloudQuote quote={currentQuote} onRefresh={getNewQuote} isChanging={isChanging} className={floatingEnabled ? "floating-animation" : ""} />
+        <CloudQuote 
+          quote={currentQuote} 
+          onRefresh={getNewQuote} 
+          isChanging={isChanging} 
+          genre={selectedGenres.join(", ")} // Display multiple genres
+          className={floatingEnabled ? "floating-animation" : ""} 
+        />
       </main>
 
-      {/* Settings sidebar (fixed position) */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
         <div className="backdrop-blur-lg bg-background/80 border border-border rounded-full p-2 shadow-sm">
           <BackgroundSelector />
         </div>
       </div>
     </div>
-  )
+  );
 }
-

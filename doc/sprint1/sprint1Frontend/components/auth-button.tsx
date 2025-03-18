@@ -40,9 +40,6 @@ export default function AuthButton() {
           <DropdownMenuItem asChild>
             <Link href="/profile">Profile</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">Account settings</Link>
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => signOut()}>
             <LogOut className="mr-2 h-4 w-4" />
