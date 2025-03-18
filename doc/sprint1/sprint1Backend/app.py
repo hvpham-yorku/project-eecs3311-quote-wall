@@ -37,8 +37,7 @@ class User(db.Model):
     __tablename__ = "USER"
     email = mapped_column(String, primary_key = True)
     password = mapped_column(String, nullable = False)
-    firstName = mapped_column(String, nullable = False)
-    lastName = mapped_column(String, nullable = False)
+    userName = mapped_column(String, nullable = False)
 
 class Genres(db.Model):
     __tablename__ = "GENRES"
@@ -69,12 +68,11 @@ with app.app_context():
 def addUser():
     email = "abc@yahoo.ca"
     password = "myPassword"
-    firstName = "myFirstName"
-    lastName = "myLastName"
+    userName = "myUsername"
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newUser = User(email = email, password = password, firstName = firstName, lastName = lastName)
+    newUser = User(email = email, password = password, userName = userName)
     session.add(newUser)
     
     try:
@@ -102,7 +100,7 @@ def addPreferences():
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newPreferences = Preferences(email = email, lightMode = True, doAnimation = True)
+    newPreferences = Preferences(email = email, textSize = 50, quoteDelay = 60, lightMode = True, doAnimation = True)
     session.add(newPreferences)
 
     session.commit()
@@ -155,8 +153,9 @@ def getQuote(email):
     else:
         print("Error:", response.status_code, response.text)
 
-#addUser()
-#addGenres()
-#addPreferences()
-#addFavorites()
-#removeUser() 
+# addUser()
+# addGenres()
+# addPreferences()
+# addFavorites()
+# removeUser() 
+getQuote("abc@yahoo.ca")
