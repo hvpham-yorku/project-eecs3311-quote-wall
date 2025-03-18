@@ -42,4 +42,4 @@
 - I want the option to **show additional information**, such as the **date and time** alongside the quote.  
 - My preferences should be **transferable between devices** (e.g., home and work laptop).  
 - I want to **create an account** to sign in from any device and retain access to my preferences and interests.  
-- My **username and password should be unique**, and my information should be **securely stored** so that only I have access to my preferences.  
+- My **username should be unique**, and my information should be **securely stored** so that only I have access to my preferences.  
