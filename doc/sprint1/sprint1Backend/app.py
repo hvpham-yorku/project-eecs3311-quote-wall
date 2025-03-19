@@ -1,5 +1,5 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings, requests
+import os, sqlalchemy, warnings, requests, random
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relationship
@@ -246,18 +246,19 @@ def updateFavorites(email, quotes):
     
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
-    Session = sessionmaker(bind = engine)
+    Session = sessionmaker(bind=engine)
     session = Session()
 
-    userGenres = session.query(Genres).filter_by(email = email).first()
-    if not userGenres:
+    userGenres = session.query(Genres).filter_by(email=email).first()
+    if not userGenres or not userGenres.genres:
         print("User is not found")
     
-    genre = userGenres.genreOne or userGenres.genreTwo or userGenres.genreThree
+    valid = [i for i in userGenres.genres if i]
+    genre = random.choice(valid) if valid else None
     if not genre:
         print("No genres selected")
 
-    api_url = 'https://api.api-ninjas.com/v1/quotes'
+    api_url = 'https://api.api-ninjas.com/v1/quotes?category={genre}'
     response = requests.get(api_url, headers={'X-Api-Key' : api_key})
 
     if response.status_code == requests.codes.ok:
@@ -277,4 +278,4 @@ print(createUser(email, password, userName))
 # print(updateTextSize())
 # print(toggleLightMode())
 # print (toggleAnimations())
-#print(updateFavorites())
+# print(updateFavorites())
