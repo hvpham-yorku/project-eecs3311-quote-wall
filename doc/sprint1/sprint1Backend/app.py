@@ -62,13 +62,27 @@ class Favorites(db.Model):
 with app.app_context():
     db.create_all()
 
-### ROUTES & FUNCTIONS ############################################################################
-@app.route("/add-user")
-def addUser():
-    email = "abc@yahoo.ca"
-    password = "myPassword"
-    userName = "myUsername"
+### CUSTOM EXCEPTION CLASS ########################################################################
+class UserCreationException(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
+### ROUTES & FUNCTIONS ############################################################################
+@app.route("/create-user")
+def createUser(email, password, userName):
+    genres = [None, None, None]
+    quotes = [None, None, None, None, None, None, None, None, None, None]
+    try:
+        addUser(email, password, userName)
+        addPreferences(email)
+        addFavorites(email, quotes)
+        addGenres(email, genres)
+        return "[/create-user] Successfully created user"
+    except UserCreationException as e:
+        return "[/create-user] An error occurred while trying to create the user:\n{}".format(e)
+
+def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
     session = Session()
     
@@ -76,15 +90,11 @@ def addUser():
         newUser = User(email = email, password = password, userName = userName)
         session.add(newUser)
         session.commit()
-        return"[/add-user] User successfully added"
+        return"[addUser] User successfully added"
     else:
-        return "[/add-user] A user with this email already exists"
+        raise UserCreationException("[addUser] A user with this email already exists")
 
-@app.route("/add-genres")
-def addGenres():
-    email = "abc@yahoo.ca"
-    genres = [None, None, None]
-
+def addGenres(email, genres):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -93,16 +103,13 @@ def addGenres():
             newGenres = Genres(email = email, genres = genres)
             session.add(newGenres)
             session.commit()
-            return"[/add-genres] Successfully added genres"
+            return"[addGenres] Successfully added genres"
         else:
-            return "[/add-genres] Referencing email already exists in 'GENRES'"
+            raise UserCreationException("[addGenres] Referencing email already exists in 'GENRES'")
     else:
-        return "[/add-genres] No user with this email exists in the database"
+        raise UserCreationException("[addGenres] No user with this email exists in the database")
 
-@app.route("/add-preferences")
-def addPreferences():
-    email = "abc@yahoo.ca"
-
+def addPreferences(email):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -111,17 +118,13 @@ def addPreferences():
             newPreferences = Preferences(email = email, textSize = 50, quoteDelay = 60, lightMode = True, doAnimation = True)
             session.add(newPreferences)
             session.commit()
-            return"[/add-preferences] Successfully added preferences"
+            return"[addPreferences] Successfully added preferences"
         else:
-            return "[/add-preferences] Referencing email already has an entry in 'PREFERENCES'"
+            raise UserCreationException("[addPreferences] Referencing email already has an entry in 'PREFERENCES'")
     else:
-        return "[/add-preferences] No user with this email exists in the database"
+        raise UserCreationException("[addPreferences] No user with this email exists in the database")
 
-@app.route("/add-favorites")
-def addFavorites():
-    email = "abc@yahoo.ca"
-    quotes = [None, None, None, None, None, None, None, None, None, None]
-
+def addFavorites(email, quotes):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -130,16 +133,14 @@ def addFavorites():
             newFavorites = Favorites(email = email, quotes = quotes)
             session.add(newFavorites)
             session.commit()
-            return"[/add-favorites] Successfully added favorites"
+            return"[addFavorites] Successfully added favorites"
         else:
-            return "[/add-favorites] Referencing email already has an entry in 'FAVORITES'"
+            raise UserCreationException("[addFavorites] Referencing email already has an entry in 'FAVORITES'")
     else:
-        return "[/add-favorites] No user with this email exists in the database"
+        raise UserCreationException("[addFavorites] No user with this email exists in the database")
 
 @app.route("/remove-user")
-def removeUser():
-    email = "abc@yahoo.ca"
-    
+def removeUser(email):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -152,13 +153,7 @@ def removeUser():
         return "[/remove-user] User does not exist in database"
 
 @app.route("/user-update-genres")
-def updateGenres():
-    email = "abc@yahoo.ca"
-    newGenresOne = "GenreOne"
-    newGenresTwo = "GenreTwo"
-    newGenresThree = "GenreThree"
-    genres = [newGenresOne, newGenresTwo, newGenresThree]
-
+def updateGenres(email, genres):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -173,10 +168,7 @@ def updateGenres():
         return "[/user-update-genres] No user with this email exists in the database"
 
 @app.route("/user-update-textSize")
-def updateTextSize():
-    email = "abc@yahoo.ca"
-    newTextSize = 75
-
+def updateTextSize(email, newTextSize):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -189,11 +181,24 @@ def updateTextSize():
             return "[/user-update-textSize] Referencing email already has no entry in 'PREFERENCES'"
     else:
         return "[/user-update-textSize] No user with this email exists in the database"
+
+@app.route("/user-update-quoteDelay")
+def updateQuoteDelay(email, newQuoteDelay):
+    Session = sessionmaker(bind = engine)
+    session = Session()
+
+    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(session.query(Preferences.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            session.query(Preferences).filter(Preferences.email == email).update({Preferences.quoteDelay: newQuoteDelay})
+            session.commit()
+            return"[/user-update-quoteDelay] Successfully updated text size"
+        else:
+            return "[/user-update-quoteDelay] Referencing email already has no entry in 'PREFERENCES'"
+    else:
+        return "[/user-update-quoteDelay] No user with this email exists in the database"
     
 @app.route("/user-toggle-lightMode")
-def toggleLightMode():
-    email = "abc@yahoo.ca"
-
+def toggleLightMode(email):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -209,9 +214,7 @@ def toggleLightMode():
         return "[/user-toggle-lightMode] No user with this email exists in the database"
 
 @app.route("/user-toggle-animations")
-def toggleAnimations():
-    email = "abc@yahoo.ca"
-
+def toggleAnimations(email):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -227,12 +230,7 @@ def toggleAnimations():
         return "[/user-toggle-animations] No user with this email exists in the database"
     
 @app.route("/user-update-favorites")
-def updateFavorites():
-    email = "abc@yahoo.ca"
-    newFavOne = "FavouriteOne"
-    newFavTwo = "FavouriteTwo"
-    quotes = [newFavOne, newFavTwo, None, None, None, None, None, None, None, None]
-
+def updateFavorites(email, quotes):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -267,11 +265,13 @@ def getQuote(email):
     else:
         print("Error:", response.status_code, response.text)
 
-print(addUser())
-print(addGenres())
-print(addPreferences())
-print(addFavorites())
-#print(removeUser())
+
+email = "abc@yahoo.ca"
+userName = "myUserName"
+password = "myPassword"
+
+print(createUser(email, password, userName))
+#print(removeUser(email))
 # print(getQuote("abc@yahoo.ca"))
 # print(updateGenres())
 # print(updateTextSize())
