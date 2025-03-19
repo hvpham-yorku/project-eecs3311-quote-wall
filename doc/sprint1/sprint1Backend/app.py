@@ -6,6 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relatio
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, String, Integer, Boolean, ForeignKey, insert, delete, select, exc
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.sql import exists
 from dotenv import load_dotenv
 warnings.simplefilter("default")
 warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
@@ -72,13 +73,14 @@ def addUser():
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newUser = User(email = email, password = password, userName = userName)
-    session.add(newUser)
     
-    try:
+    if(session.query(User.email).filter_by(email=email).first() is None):
+        newUser = User(email = email, password = password, userName = userName)
+        session.add(newUser)
         session.commit()
-    except IntegrityError:
-        print("[/add-user] User Already Exists in Database")
+        return"[/add-user] User successfully added"
+    else:
+        return "[/add-user] A user with this email already exists"
 
 @app.route("/add-genres")
 def addGenres():
@@ -86,13 +88,17 @@ def addGenres():
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newGenres = Genres(email = email)
-    session.add(newGenres)
 
-    try:
-        session.commit()
-    except IntegrityError:
-        print("[/add-genres] Referencing Email Already Exists in Database")
+    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(session.query(Genres.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'GENRES'
+            newGenres = Genres(email = email)
+            session.add(newGenres)
+            session.commit()
+            return"[/add-genres] Successfully added genres"
+        else:
+            return "[/add-genres] Referencing email already exists in 'GENRES'"
+    else:
+        return "[/add-genres] No user with this email exists in the database"
 
 @app.route("/add-preferences")
 def addPreferences():
@@ -100,10 +106,17 @@ def addPreferences():
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newPreferences = Preferences(email = email, textSize = 50, quoteDelay = 60, lightMode = True, doAnimation = True)
-    session.add(newPreferences)
 
-    session.commit()
+    if(session.query(User.email).filter_by(email=email).first() is not None):
+        if(session.query(Preferences.email).filter_by(email=email).first() is None):
+            newPreferences = Preferences(email = email, textSize = 50, quoteDelay = 60, lightMode = True, doAnimation = True)
+            session.add(newPreferences)
+            session.commit()
+            return"[/add-preferences] Successfully added preferences"
+        else:
+            return "[/add-preferences] Referencing email already has an entry in 'PREFERENCES'"
+    else:
+        return "[/add-preferences] No user with this email exists in the database"
 
 @app.route("/add-favorites")
 def addFavorites():
@@ -111,13 +124,17 @@ def addFavorites():
 
     Session = sessionmaker(bind = engine)
     session = Session()
-    newFavorites = Favorites(email = email)
-    session.add(newFavorites)
 
-    try:
-        session.commit()
-    except IntegrityError:
-        print("[/add-favorites] Referencing Email Already Exists in Database")
+    if(session.query(User.email).filter_by(email=email).first() is not None):
+        if(session.query(Favorites.email).filter_by(email=email).first() is None):
+            newFavorites = Favorites(email = email)
+            session.add(newFavorites)
+            session.commit()
+            return"[/add-favorites] Successfully added favorites"
+        else:
+            return "[/add-favorites] Referencing email already has an entry in 'FAVORITES'"
+    else:
+        return "[/add-favorites] No user with this email exists in the database"
 
 @app.route("/remove-user")
 def removeUser():
@@ -125,12 +142,14 @@ def removeUser():
     
     Session = sessionmaker(bind = engine)
     session = Session()
+
     deleteUser = session.query(User).get(email)
     if deleteUser != None:
         session.delete(deleteUser)
         session.commit()
+        return "[/remove-user] Successfully removed user"
     else:
-        print("[/remove-user] User Does not Exist in Database")
+        return "[/remove-user] User does not exist in database"
 
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
@@ -153,9 +172,9 @@ def getQuote(email):
     else:
         print("Error:", response.status_code, response.text)
 
-# addUser()
-# addGenres()
-# addPreferences()
-# addFavorites()
-# removeUser() 
-getQuote("abc@yahoo.ca")
+print(addUser())
+print(addGenres())
+print(addPreferences())
+print(addFavorites())
+# print(removeUser())
+# print(getQuote("abc@yahoo.ca"))
