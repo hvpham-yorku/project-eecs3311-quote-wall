@@ -1,6 +1,7 @@
 ### IMPORTS #######################################################################################
 import os, sqlalchemy, warnings, requests, random
-from flask import Flask
+from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relationship
 from sqlalchemy.exc import IntegrityError
@@ -22,6 +23,7 @@ class Base(DeclarativeBase):
 ### INITIALIZE DATABSE & FLASK APPLICATION ########################################################
 db = SQLAlchemy(model_class = Base)
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 db.init_app(app)
 
@@ -69,8 +71,14 @@ class UserCreationException(Exception):
         super().__init__(self.message)
 
 ### ROUTES & FUNCTIONS ############################################################################
-@app.route("/create-user")
-def createUser(email, password, userName):
+@app.route("/create-user", methods = ["POST"])
+@cross_origin()  
+def createUser():
+    data = request.get_json()
+    email = data["email"]
+    password = data["password"]
+    userName = data["name"]
+
     genres = [None, None, None]
     quotes = [None, None, None, None, None, None, None, None, None, None]
     try:
@@ -78,9 +86,9 @@ def createUser(email, password, userName):
         addPreferences(email)
         addFavorites(email, quotes)
         addGenres(email, genres)
-        return "[/create-user] Successfully created user"
+        return jsonify("[/create-user] Successfully created user")
     except UserCreationException as e:
-        return "[/create-user] An error occurred while trying to create the user:\n{}".format(e)
+        return jsonify("[/create-user] An error occurred while trying to create the user:\n{}".format(e))
 
 def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
@@ -270,12 +278,17 @@ def getQuote(email):
 email = "abc@yahoo.ca"
 userName = "myUserName"
 password = "myPassword"
+genres = ["genreOne", "genreTwo", "GenreThree"]
+quotes = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"]
+textSize = 75
+quoteDelay = 90
 
-print(createUser(email, password, userName))
-#print(removeUser(email))
+# print(createUser(email, password, userName))
+# print(removeUser(email))
 # print(getQuote("abc@yahoo.ca"))
-# print(updateGenres())
-# print(updateTextSize())
-# print(toggleLightMode())
-# print (toggleAnimations())
-# print(updateFavorites())
+# print(updateGenres(email, genres))
+# print(updateTextSize(email, textSize))
+# print(updateQuoteDelay(email, quoteDelay))
+# print(toggleLightMode(email))
+# print (toggleAnimations(email))
+# print(updateFavorites(email, quotes))

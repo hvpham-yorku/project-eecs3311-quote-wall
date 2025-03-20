@@ -27,7 +27,7 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/[...nextauth]", {
+      const response = await fetch("http://127.0.0.1:5000/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
