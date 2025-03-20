@@ -38,8 +38,6 @@ The frontend of the website will be implemented using React, and the backend wil
     > Quotes shown to the user are curated from a list of preferences that the user themself chooses.
 - I want **customization options** for content display, including **text size and positioning**.  
     > In the options tab, there exists a slider so that the user can adjust the size of text.
-- I want the option to **show additional information**, such as the **date and time** alongside the quote.
-    > The date and time are displayed at the top of the screen.
 - My preferences should be **transferable between devices** (e.g., home and work laptop).
     > The implementation of accounts allows for user data to be loaded to and from any device.
 - I want to **create an account** to sign in from any device and retain access to my preferences and interests.
