@@ -1,5 +1,5 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings, requests, random
+import os, sqlalchemy, warnings, random, requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
@@ -77,7 +77,7 @@ def createUser():
     data = request.get_json()
     email = data["email"]
     password = data["password"]
-    userName = data["name"]
+    userName = data["userName"]
 
     genres = [None, None, None]
     quotes = [None, None, None, None, None, None, None, None, None, None]
@@ -251,7 +251,25 @@ def updateFavorites(email, quotes):
             return "[/user-update-favorites] Referencing email already has no entry in 'FAVORITES'"
     else:
         return "[/user-update-favorites] No user with this email exists in the database"
-    
+
+@app.route("/validate-user", methods = ["POST"])
+@cross_origin()
+def validateUser():
+    data = request.get_json()
+    email = data["email"]
+    password = data["password"]
+
+    Session = sessionmaker(bind = engine)
+    session = Session()
+
+    if(session.query(User.email).filter_by(email=email).first() is not None):
+        if(session.query(User.email).filter_by(email=email).first() is not None):
+            return jsonify("[validate-user] Successfully logged in")
+        else:
+            return jsonify("[/validate-user] Password is incorrect")
+    else:
+        return jsonify("[/validate-user] No user with this email exists")
+
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
     Session = sessionmaker(bind=engine)
