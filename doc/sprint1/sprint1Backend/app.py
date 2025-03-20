@@ -1,6 +1,6 @@
 ### IMPORTS #######################################################################################
 import os, sqlalchemy, warnings, random, requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relationship
@@ -70,7 +70,7 @@ class UserCreationException(Exception):
         self.message = message
         super().__init__(self.message)
 
-### ROUTES & FUNCTIONS ############################################################################
+### USER FUNCTIONS ################################################################################
 @app.route("/create-user", methods = ["POST"])
 @cross_origin()  
 def createUser():
@@ -88,7 +88,7 @@ def createUser():
         addGenres(email, genres)
         return jsonify("[/create-user] Successfully created user")
     except UserCreationException as e:
-        return jsonify("[/create-user] An error occurred while trying to create the user:\n{}".format(e))
+        return jsonify("[/create-user] An error occurred while trying to create the user:{}".format(e))
 
 def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
@@ -147,8 +147,12 @@ def addFavorites(email, quotes):
     else:
         raise UserCreationException("[addFavorites] No user with this email exists in the database")
 
-@app.route("/remove-user")
-def removeUser(email):
+@app.route("/remove-user", methods = ["POST"])
+@cross_origin()
+def removeUser():
+    data = request.get_json()
+    email = data["email"]
+
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -156,12 +160,17 @@ def removeUser(email):
     if deleteUser != None:
         session.delete(deleteUser)
         session.commit()
-        return "[/remove-user] Successfully removed user"
+        return jsonify("[/remove-user] Successfully removed user")
     else:
-        return "[/remove-user] User does not exist in database"
+        return jsonify("[/remove-user] User does not exist in database")
 
-@app.route("/user-update-genres")
-def updateGenres(email, genres):
+### GENRES FUNCTIONS ##############################################################################
+@app.route("/user-update-genres", methods = ["POST"])
+def updateGenres():
+    data = request.get_json()
+    email = data["email"]
+    genres = data["genres"]
+
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -175,7 +184,26 @@ def updateGenres(email, genres):
     else:
         return "[/user-update-genres] No user with this email exists in the database"
 
-@app.route("/user-update-textSize")
+### PREFERENCES FUNCTIONS #########################################################################
+@app.route("/user-update-preferences", methods = ["POST"])
+@cross_origin()
+def updatePreferences():
+    data = request.get_json()
+    email = data["email"]
+    textSize = data["textSize"]
+    quoteDelay = data["quoteDelay"]
+    lightMode = data["lightMode"]
+    doAnimation = data["doAnimation"]
+
+    try:
+        updateTextSize(email, textSize)
+        updateQuoteDelay(email, quoteDelay)
+        toggleLightMode(email)
+        toggleAnimation(email)
+        return jsonify("[/user-update-preferences] Successfully updated user preferences")
+    except UserCreationException as e:
+        return jsonify("[/user-update-preferences] An error occurred while trying to update preferences")
+    
 def updateTextSize(email, newTextSize):
     Session = sessionmaker(bind = engine)
     session = Session()
@@ -190,7 +218,6 @@ def updateTextSize(email, newTextSize):
     else:
         return "[/user-update-textSize] No user with this email exists in the database"
 
-@app.route("/user-update-quoteDelay")
 def updateQuoteDelay(email, newQuoteDelay):
     Session = sessionmaker(bind = engine)
     session = Session()
@@ -205,7 +232,6 @@ def updateQuoteDelay(email, newQuoteDelay):
     else:
         return "[/user-update-quoteDelay] No user with this email exists in the database"
     
-@app.route("/user-toggle-lightMode")
 def toggleLightMode(email):
     Session = sessionmaker(bind = engine)
     session = Session()
@@ -221,8 +247,7 @@ def toggleLightMode(email):
     else:
         return "[/user-toggle-lightMode] No user with this email exists in the database"
 
-@app.route("/user-toggle-animations")
-def toggleAnimations(email):
+def toggleAnimation(email):
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -231,14 +256,19 @@ def toggleAnimations(email):
             inverse = False if (session.query(Preferences.doAnimation).filter_by(email = email).first()[0] == True) else True
             session.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: inverse})
             session.commit()
-            return"[/user-toggle-animations] Successfully toggled animations"
+            return"[/user-toggle-animation] Successfully toggled animations"
         else:
-            return "[/user-toggle-animations] Referencing email already has no entry in 'PREFERENCES'"
+            return "[/user-toggle-animation] Referencing email already has no entry in 'PREFERENCES'"
     else:
-        return "[/user-toggle-animations] No user with this email exists in the database"
-    
+        return "[/user-toggle-animation] No user with this email exists in the database"
+
+### FAVORITES FUNCTIONS ###########################################################################
 @app.route("/user-update-favorites")
-def updateFavorites(email, quotes):
+def updateFavorites():
+    data = request.get_json()
+    email = data["email"]
+    quotes = data["quotes"]
+
     Session = sessionmaker(bind = engine)
     session = Session()
 
@@ -270,6 +300,7 @@ def validateUser():
     else:
         return jsonify("[/validate-user] No user with this email exists")
 
+### QUOTES FUNCTIONS ##############################################################################
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
     Session = sessionmaker(bind=engine)
@@ -291,22 +322,3 @@ def getQuote(email):
         print(response.text)
     else:
         print("Error:", response.status_code, response.text)
-
-
-email = "abc@yahoo.ca"
-userName = "myUserName"
-password = "myPassword"
-genres = ["genreOne", "genreTwo", "GenreThree"]
-quotes = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"]
-textSize = 75
-quoteDelay = 90
-
-# print(createUser(email, password, userName))
-# print(removeUser(email))
-# print(getQuote("abc@yahoo.ca"))
-# print(updateGenres(email, genres))
-# print(updateTextSize(email, textSize))
-# print(updateQuoteDelay(email, quoteDelay))
-# print(toggleLightMode(email))
-# print (toggleAnimations(email))
-# print(updateFavorites(email, quotes))
