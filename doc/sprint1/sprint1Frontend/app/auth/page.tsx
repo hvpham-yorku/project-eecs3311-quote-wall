@@ -21,51 +21,79 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const router = useRouter();
 
-  // Signup handler
+// Signup handler
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    setIsLoading(true);  
     try {
       const response = await fetch("http://127.0.0.1:5000/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ userName : name, email, password }), 
       });
-
+  
       const data = await response.json();
       if (response.ok) {
-        alert("Account created! Please log in.");
+        alert("Account created! Redirecting to the main page.");
+        router.push("/"); // Redirect to the main page after signup
       } else {
-        alert(data.error);
+        alert(data.error || "An error occurred during signup");
       }
     } catch (error) {
       console.error("Signup error:", error);
       alert("An error occurred. Please try again.");
     }
-
+  
     setIsLoading(false);
   };
+  
+//Loginin handler
+const [user, setUser] = useState<any>(null);  // Store user in state
 
-  // Login handler
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
+  try {
+    const response = await fetch("http://127.0.0.1:5000/validate-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+      }),
     });
 
-    if (result?.error) {
-      alert("Invalid credentials. Please try again.");
-    } else {
-      router.push("/quotes"); // Redirect to quotes page after login
-    }
+    const data = await response.json();
+    if (response.ok) {
+      const userData = {
+        name: data.userName,
+        email: email,
+      };
 
-    setIsLoading(false);
-  };
+      setUser(userData);  // Store user in state
+
+      signIn("credentials", {
+        email,
+        password,
+        redirect: false, // prevent redirect (handled manually)
+      }).then(() => {
+        // Redirect to the main page
+        alert("Login successful! Redirecting to the main page.");
+        router.push("/"); 
+      });
+    } else {
+      alert(data.error || "Invalid credentials.");
+    }
+} catch (error) {
+  console.error("Login error:", error);
+  alert("An error occurred. Please try again.");
+}
+
+setIsLoading(false);
+};
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
