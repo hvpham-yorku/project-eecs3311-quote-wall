@@ -14,17 +14,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function AuthButton() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // Check the session status
+  
+  console.log(session); // Debugging to ensure the session is correctly updated
+
+  if (status === "loading") {
+    return <Button variant="ghost" size="sm">Loading...</Button>; // Show a loading button while session is being fetched
+  }
 
   if (session?.user) {
+    const avatarImage =
+      session.user.image ||
+      `https://ui-avatars.com/api/?name=${session.user.name ? session.user.name[0] : "U"}&background=random&color=fff`;
+
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={session.user.image || "/placeholder.svg"} alt={session.user.name || "User"} />
+              <AvatarImage src={avatarImage} alt={session.user.name || "User"} />
               <AvatarFallback>
-                <User className="h-4 w-4" />
+                <span className="h-4 w-4">{session.user.name ? session.user.name[0] : "U"}</span>
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -51,7 +61,7 @@ export default function AuthButton() {
   }
 
   return (
-    <Button variant="ghost" size="sm" className="gap-2" onClick={() => signIn()}>
+    <Button variant="ghost" size="sm" className="gap-2" onClick={() => signIn("credentials")}>
       <LogIn className="h-4 w-4" />
       <span>Sign In</span>
     </Button>

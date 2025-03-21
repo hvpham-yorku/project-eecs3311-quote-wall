@@ -21,51 +21,79 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const router = useRouter();
 
-  // Signup handler
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const response = await fetch("http://127.0.0.1:5000/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ userName: name, email, password }), // Send signup data
       });
-
+  
       const data = await response.json();
+  
       if (response.ok) {
-        alert("Account created! Please log in.");
+        // After successfully creating the user, log them in automatically using NextAuth
+        signIn("credentials", { email: data.email, password: data.password })
+          .then(() => {
+            alert("Account created and logged in! Redirecting to the main page.");
+            router.push("/"); // Redirect to the main page
+          });
       } else {
-        alert(data.error);
+        alert(data.error || "An error occurred during signup");
       }
     } catch (error) {
       console.error("Signup error:", error);
       alert("An error occurred. Please try again.");
     }
-
+  
     setIsLoading(false);
   };
 
-  // Login handler
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
-
-    if (result?.error) {
-      alert("Invalid credentials. Please try again.");
-    } else {
-      router.push("/quotes"); // Redirect to quotes page after login
+  
+    try {
+      const response = await fetch("http://127.0.0.1:5000/validate-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        // Upon successful login, manually update the session data using next-auth signIn
+        signIn("credentials", {
+          email,
+          password,
+          redirect: false, // Don't redirect automatically
+        }).then(() => {
+          alert("Login successful! Redirecting to the main page.");
+          router.push("/"); // Redirect to the main page
+        });
+      } else {
+        alert(data.error || "Invalid credentials.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("An error occurred. Please try again.");
     }
-
+  
     setIsLoading(false);
   };
+  
+  
+
+  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">

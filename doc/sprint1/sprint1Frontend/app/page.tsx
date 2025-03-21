@@ -2,26 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {BookText,
-  Brain,
-  ChevronRight,
-  Clock,
-  Cpu,
-  Film,
-  Gamepad2,
-  HeartPulse,
-  LandPlot,
-  Leaf,
-  Microscope,
-  Music,
-  Trophy,
-  ChevronDown,
-  ChevronUp} from "lucide-react";
-
+import { BookText, Brain, ChevronRight, Clock, Cpu, Film, Gamepad2, HeartPulse, LandPlot, Leaf, Microscope, Music, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ThemeToggle from "@/components/theme-toggle";
 import BackgroundSelector from "@/components/background-selector";
+import { useSession } from "next-auth/react"; // Import useSession hook to access session data
 import SettingsPanel from "@/components/settings-panel";
 import AuthButton from "@/components/auth-button";
 
@@ -41,16 +27,24 @@ const allGenres = [
 ];
 
 export default function HomePage() {
+  const { data: session } = useSession(); // Access session data to check if user is logged in
   const router = useRouter();
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]); // Store multiple selected genres
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [showMore, setShowMore] = useState(false);
 
   const toggleGenreSelection = (id: string) => {
-    setSelectedGenres((prevSelected) =>
-      prevSelected.includes(id)
-        ? prevSelected.filter((genre) => genre !== id) // Remove if already selected
-        : [...prevSelected, id] // Add if not selected
-    );
+    setSelectedGenres((prevSelected) => {
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter((genre) => genre !== id); // Remove if already selected
+      } else {
+        if (prevSelected.length < 3) {
+          return [...prevSelected, id]; // Add if not selected and less than 3 genres
+        } else {
+          alert("You can only select a maximum of 3 genres.");
+          return prevSelected; // Do nothing if 3 genres are already selected
+        }
+      }
+    });
   };
 
   const handleContinue = () => {
@@ -59,23 +53,23 @@ export default function HomePage() {
     }
   };
 
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header with auth button */}
       <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-10">
         <div className="container max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 dark:from-primary dark:to-purple-400 text-transparent bg-clip-text">
             The QuoteWall
           </h1>
           <div className="flex items-center gap-2">
-            <AuthButton />
-            {/* <SettingsPanel getNewQuote={() => {}} setFloatingEnabled={() => {}} /> */}
+            {/* Display user profile info if logged in */}
+            
+              <AuthButton />
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-8 md:py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-purple-600 dark:from-primary dark:to-purple-400 text-transparent bg-clip-text mb-4">
@@ -155,8 +149,9 @@ export default function HomePage() {
               onClick={() => setShowMore(!showMore)}
               className="px-6 py-4 text-lg flex items-center"
             >
-            {showMore ? "Show Less" : "Show More"} 
-            {showMore ? <ChevronUp className="ml-2 h-5 w-5" /> : <ChevronDown className="ml-2 h-5 w-5" />}            </Button>
+              {showMore ? "Show Less" : "Show More"}
+              {showMore ? <ChevronUp className="ml-2 h-5 w-5" /> : <ChevronDown className="ml-2 h-5 w-5" />}
+            </Button>
           </div>
         </div>
 

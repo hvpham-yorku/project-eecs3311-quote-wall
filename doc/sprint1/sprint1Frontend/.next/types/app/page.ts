@@ -1,4 +1,4 @@
-// File: C:\Users\xspar\Documents\VSCode\project-eecs3311-quote-wall\doc\sprint1\sprint1Frontend\app\page.tsx
+// File: G:\EECS3311\project-eecs3311-quote-wall\doc\sprint1\sprint1Frontend\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
