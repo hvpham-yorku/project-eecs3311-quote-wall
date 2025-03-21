@@ -1,5 +1,5 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings, requests, random
+import os, sqlalchemy, warnings, random, requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
@@ -77,18 +77,25 @@ def createUser():
     data = request.get_json()
     email = data["email"]
     password = data["password"]
-    userName = data["name"]
+    userName = data["userName"]  # This will match the 'userName' sent from frontend
+
+    # Check if the email already exists in the database
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already exists"}), 400  # Return error if email exists
 
     genres = [None, None, None]
     quotes = [None, None, None, None, None, None, None, None, None, None]
+
     try:
+        # Add the new user, preferences, favorites, and genres
         addUser(email, password, userName)
         addPreferences(email)
         addFavorites(email, quotes)
         addGenres(email, genres)
-        return jsonify("[/create-user] Successfully created user")
+        return jsonify({"message": "Successfully created user"}), 201
     except UserCreationException as e:
-        return jsonify("[/create-user] An error occurred while trying to create the user:\n{}".format(e))
+        return jsonify({"error": f"An error occurred while trying to create the user: {str(e)}"}), 500
+
 
 def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
@@ -251,7 +258,30 @@ def updateFavorites(email, quotes):
             return "[/user-update-favorites] Referencing email already has no entry in 'FAVORITES'"
     else:
         return "[/user-update-favorites] No user with this email exists in the database"
-    
+
+@app.route("/validate-user", methods=["POST"])
+@cross_origin()
+def validateUser():
+    data = request.get_json()
+    print(data)
+    email = data["email"]
+    password = data["password"]
+
+    # Query the database to find the user by email
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    user = session.query(User).filter_by(email=email).first()
+    print(user)
+    if user:
+        if user.password == password:  # Check if the password matches
+            return jsonify("Login successful!")
+        else:
+            return jsonify({"error": "Invalid password"}), 400
+    else:
+        return jsonify({"error": "No user with this email exists"}), 404
+
+
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
     Session = sessionmaker(bind=engine)
