@@ -1,6 +1,6 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings, requests, random
-from flask import Flask, request, jsonify
+import os, sqlalchemy, warnings, random, requests
+from flask import Flask, request, jsonify, Response, session
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, relationship
@@ -15,6 +15,7 @@ warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 ### LOAD ENVIRONMENT VARIABLES FROM .ENV ##########################################################
 load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
+SECRET_KEY = os.getenv("SECRET_KEY")
 api_key = os.getenv("API_KEY")
 
 class Base(DeclarativeBase):
@@ -23,6 +24,7 @@ class Base(DeclarativeBase):
 ### INITIALIZE DATABSE & FLASK APPLICATION ########################################################
 db = SQLAlchemy(model_class = Base)
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 db.init_app(app)
@@ -65,19 +67,19 @@ with app.app_context():
     db.create_all()
 
 ### CUSTOM EXCEPTION CLASS ########################################################################
-class UserCreationException(Exception):
+class UserDataException(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
 
-### ROUTES & FUNCTIONS ############################################################################
+### USER FUNCTIONS ################################################################################
 @app.route("/create-user", methods = ["POST"])
 @cross_origin()  
 def createUser():
     data = request.get_json()
     email = data["email"]
     password = data["password"]
-    userName = data["name"]
+    userName = data["userName"]
 
     genres = [None, None, None]
     quotes = [None, None, None, None, None, None, None, None, None, None]
@@ -87,177 +89,229 @@ def createUser():
         addFavorites(email, quotes)
         addGenres(email, genres)
         return jsonify("[/create-user] Successfully created user")
-    except UserCreationException as e:
-        return jsonify("[/create-user] An error occurred while trying to create the user:\n{}".format(e))
+    except UserDataException as e:
+        return jsonify("[/create-user] An error occurred while trying to create the user:{}".format(e)), 400
 
 def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
     
-    if(session.query(User.email).filter_by(email=email).first() is None): #Check if this email does not exist as a user in the database
+    if(mySession.query(User.email).filter_by(email=email).first() is None): #Check if this email does not exist as a user in the database
         newUser = User(email = email, password = password, userName = userName)
-        session.add(newUser)
-        session.commit()
+        mySession.add(newUser)
+        mySession.commit()
         return"[addUser] User successfully added"
     else:
-        raise UserCreationException("[addUser] A user with this email already exists")
+        raise UserDataException("[addUser] A user with this email already exists")
 
 def addGenres(email, genres):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Genres.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'GENRES'
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Genres.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'GENRES'
             newGenres = Genres(email = email, genres = genres)
-            session.add(newGenres)
-            session.commit()
+            mySession.add(newGenres)
+            mySession.commit()
             return"[addGenres] Successfully added genres"
         else:
-            raise UserCreationException("[addGenres] Referencing email already exists in 'GENRES'")
+            raise UserDataException("[addGenres] Referencing email already exists in 'GENRES'")
     else:
-        raise UserCreationException("[addGenres] No user with this email exists in the database")
+        raise UserDataException("[addGenres] No user with this email exists in the database")
 
 def addPreferences(email):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Preferences.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'PREFERENCES'
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'PREFERENCES'
             newPreferences = Preferences(email = email, textSize = 50, quoteDelay = 60, lightMode = True, doAnimation = True)
-            session.add(newPreferences)
-            session.commit()
+            mySession.add(newPreferences)
+            mySession.commit()
             return"[addPreferences] Successfully added preferences"
         else:
-            raise UserCreationException("[addPreferences] Referencing email already has an entry in 'PREFERENCES'")
+            raise UserDataException("[addPreferences] Referencing email already has an entry in 'PREFERENCES'")
     else:
-        raise UserCreationException("[addPreferences] No user with this email exists in the database")
+        raise UserDataException("[addPreferences] No user with this email exists in the database")
 
 def addFavorites(email, quotes):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Favorites.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'FAVORITES'
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Favorites.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'FAVORITES'
             newFavorites = Favorites(email = email, quotes = quotes)
-            session.add(newFavorites)
-            session.commit()
+            mySession.add(newFavorites)
+            mySession.commit()
             return"[addFavorites] Successfully added favorites"
         else:
-            raise UserCreationException("[addFavorites] Referencing email already has an entry in 'FAVORITES'")
+            raise UserDataException("[addFavorites] Referencing email already has an entry in 'FAVORITES'")
     else:
-        raise UserCreationException("[addFavorites] No user with this email exists in the database")
+        raise UserDataException("[addFavorites] No user with this email exists in the database")
 
-@app.route("/remove-user")
-def removeUser(email):
+@app.route("/remove-user", methods = ["POST"])
+@cross_origin()
+def removeUser():
+    data = request.get_json()
+    email = data["email"]
+
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    deleteUser = session.query(User).get(email) #Check if the user has an entry in 'USER'
+    deleteUser = mySession.query(User).get(email) #Check if the user has an entry in 'USER'
     if deleteUser != None:
-        session.delete(deleteUser)
-        session.commit()
-        return "[/remove-user] Successfully removed user"
+        mySession.delete(deleteUser)
+        mySession.commit()
+        return jsonify("[/remove-user] Successfully removed user")
     else:
-        return "[/remove-user] User does not exist in database"
+        return jsonify("[/remove-user] User does not exist in database"), 404
 
-@app.route("/user-update-genres")
-def updateGenres(email, genres):
+### GENRES FUNCTIONS ##############################################################################
+@app.route("/user-update-genres", methods = ["POST"])
+@cross_origin()
+def updateGenres():
+    data = request.get_json()
+    email = data["email"]
+    genres = data["genres"]
+
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Genres.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'GENRES'
-            session.query(Genres).filter(Genres.email == email).update({Genres.genres: genres})
-            session.commit()
-            return"[/user-update-genres] Successfully updated genres"
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Genres.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'GENRES'
+            mySession.query(Genres).filter(Genres.email == email).update({Genres.genres: genres})
+            mySession.commit()
+            return jsonify("[/user-update-genres] Successfully updated genres")
         else:
-            return "[/user-update-genres] Referencing email already has no entry in 'GENRES'"
+            return jsonify("[/user-update-genres] Referencing email already has no entry in 'GENRES'"), 404
     else:
-        return "[/user-update-genres] No user with this email exists in the database"
+        return jsonify("[/user-update-genres] No user with this email exists in the database"), 404
 
-@app.route("/user-update-textSize")
+### PREFERENCES FUNCTIONS #########################################################################
+@app.route("/user-update-preferences", methods = ["POST"])
+@cross_origin()
+def updatePreferences():
+    data = request.get_json()
+    email = data["email"]
+    textSize = data["textSize"]
+    quoteDelay = data["quoteDelay"]
+    lightMode = data["lightMode"]
+    doAnimation = data["doAnimation"]
+
+    try:
+        updateTextSize(email, textSize)
+        updateQuoteDelay(email, quoteDelay)
+        toggleLightMode(email)
+        toggleAnimation(email)
+        return jsonify("[/user-update-preferences] Successfully updated user preferences")
+    except UserDataException as e:
+        return jsonify("[/user-update-preferences] An error occurred while trying to update preferences:{}".format(e)), 400
+    
 def updateTextSize(email, newTextSize):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Preferences.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            session.query(Preferences).filter(Preferences.email == email).update({Preferences.textSize: newTextSize})
-            session.commit()
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.textSize: newTextSize})
+            mySession.commit()
             return"[/user-update-textSize] Successfully updated text size"
         else:
-            return "[/user-update-textSize] Referencing email already has no entry in 'PREFERENCES'"
+            raise UserDataException("/user-update-textSize] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        return "[/user-update-textSize] No user with this email exists in the database"
+        raise UserDataException("[/user-update-textSize] No user with this email exists in the database")
 
-@app.route("/user-update-quoteDelay")
 def updateQuoteDelay(email, newQuoteDelay):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Preferences.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            session.query(Preferences).filter(Preferences.email == email).update({Preferences.quoteDelay: newQuoteDelay})
-            session.commit()
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.quoteDelay: newQuoteDelay})
+            mySession.commit()
             return"[/user-update-quoteDelay] Successfully updated text size"
         else:
-            return "[/user-update-quoteDelay] Referencing email already has no entry in 'PREFERENCES'"
+            raise UserDataException("[/user-update-quoteDelay] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        return "[/user-update-quoteDelay] No user with this email exists in the database"
+        raise UserDataException("[/user-update-quoteDelay] No user with this email exists in the database")
     
-@app.route("/user-toggle-lightMode")
 def toggleLightMode(email):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            inverse = False if (session.query(Preferences.lightMode).filter_by(email = email).first()[0] == True) else True
-            session.query(Preferences).filter(Preferences.email == email).update({Preferences.lightMode: inverse})
-            session.commit()
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            inverse = False if (mySession.query(Preferences.lightMode).filter_by(email = email).first()[0] == True) else True
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.lightMode: inverse})
+            mySession.commit()
             return"[/user-toggle-lightMode] Successfully toggled light mode"
         else:
-            return "[/user-toggle-lightMode] Referencing email already has no entry in 'PREFERENCES'"
+            raise UserDataException("[/user-toggle-lightMode] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        return "[/user-toggle-lightMode] No user with this email exists in the database"
+        raise UserDataException("[/user-toggle-lightMode] No user with this email exists in the database")
 
-@app.route("/user-toggle-animations")
-def toggleAnimations(email):
+def toggleAnimation(email):
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            inverse = False if (session.query(Preferences.doAnimation).filter_by(email = email).first()[0] == True) else True
-            session.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: inverse})
-            session.commit()
-            return"[/user-toggle-animations] Successfully toggled animations"
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            inverse = False if (mySession.query(Preferences.doAnimation).filter_by(email = email).first()[0] == True) else True
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: inverse})
+            mySession.commit()
+            return"[/user-toggle-animation] Successfully toggled animations"
         else:
-            return "[/user-toggle-animations] Referencing email already has no entry in 'PREFERENCES'"
+            raise UserDataException("[/user-toggle-animation] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        return "[/user-toggle-animations] No user with this email exists in the database"
-    
-@app.route("/user-update-favorites")
-def updateFavorites(email, quotes):
+        raise UserDataException("[/user-toggle-animation] No user with this email exists in the database")
+
+### FAVORITES FUNCTIONS ###########################################################################
+@app.route("/user-update-favorites", methods = ["POST"])
+@cross_origin()
+def updateFavorites():
+    data = request.get_json()
+    email = data["email"]
+    quotes = data["quotes"]
+
     Session = sessionmaker(bind = engine)
-    session = Session()
+    mySession = Session()
 
-    if(session.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
-        if(session.query(Favorites.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'FAVORITES'
-            session.query(Favorites).filter(Favorites.email == email).update({Favorites.quotes: quotes})
-            session.commit()
-            return"[/user-update-favorites] Successfully updated genres"
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Favorites.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'FAVORITES'
+            mySession.query(Favorites).filter(Favorites.email == email).update({Favorites.quotes: quotes})
+            mySession.commit()
+            return jsonify("[/user-update-favorites] Successfully updated genres")
         else:
-            return "[/user-update-favorites] Referencing email already has no entry in 'FAVORITES'"
+            return jsonify("[/user-update-favorites] Referencing email already has no entry in 'FAVORITES'"), 400
     else:
-        return "[/user-update-favorites] No user with this email exists in the database"
-    
+        return jsonify("[/user-update-favorites] No user with this email exists in the database"), 404
+
+@app.route("/validate-user", methods = ["POST"])
+@cross_origin()
+def validateUser():
+    data = request.get_json()
+    email = data["email"]
+    password = data["password"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email=email).first() is not None):
+        if(mySession.query(User.email).filter_by(email=email).first() is not None):
+            session["email"] = email
+            return jsonify("[validate-user] Successfully logged in")
+        else:
+            return jsonify("[/validate-user] Password is incorrect"), 401
+    else:
+        return jsonify("[/validate-user] No user with this email exists"), 401
+
+### QUOTES FUNCTIONS ##############################################################################
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
     Session = sessionmaker(bind=engine)
-    session = Session()
+    mySession = Session()
 
-    userGenres = session.query(Genres).filter_by(email=email).first()
+    userGenres = mySession.query(Genres).filter_by(email=email).first()
     if not userGenres or not userGenres.genres:
         print("User is not found")
     
@@ -274,21 +328,9 @@ def getQuote(email):
     else:
         print("Error:", response.status_code, response.text)
 
-
-email = "abc@yahoo.ca"
-userName = "myUserName"
-password = "myPassword"
-genres = ["genreOne", "genreTwo", "GenreThree"]
-quotes = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"]
-textSize = 75
-quoteDelay = 90
-
-# print(createUser(email, password, userName))
-# print(removeUser(email))
-# print(getQuote("abc@yahoo.ca"))
-# print(updateGenres(email, genres))
-# print(updateTextSize(email, textSize))
-# print(updateQuoteDelay(email, quoteDelay))
-# print(toggleLightMode(email))
-# print (toggleAnimations(email))
-# print(updateFavorites(email, quotes))
+@app.route("/session-get-data", methods = ["GET"])
+def getSessionData():
+    if "email" in session:
+        return session["email"]
+    else:
+        return jsonify("No email in session"), 404
