@@ -265,6 +265,79 @@ def toggleAnimation(email):
     else:
         raise UserDataException("[/user-toggle-animation] No user with this email exists in the database")
 
+### PREFERENCES GETTER FUNCTIONS ##################################################################
+@app.route("/user-get-text-size", methods = ["POST"])
+@cross_origin()
+def getTextSize():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            textSize = mySession.query(Preferences.textSize).filter_by(email = email).first()[0]
+            return jsonify({'textSize' : textSize})
+        else:
+            return jsonify("[/user-get-text-size] Referencing email already has no entry in 'PREFERENCES"), 400
+    else:
+        return jsonify("[/user-get-text-size] No user with this email exists in the database"), 400
+
+@app.route("/user-get-quote-delay", methods = ["POST"])
+@cross_origin()
+def getQuoteDelay():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            quoteDelay = mySession.query(Preferences.quoteDelay).filter_by(email = email).first()[0]
+            return jsonify({'quoteDelay' : quoteDelay})
+        else:
+            return jsonify("[/user-get-quote-delay] Referencing email already has no entry in 'PREFERENCES"), 400
+    else:
+        return jsonify("[/user-get-quote-delay] No user with this email exists in the database"), 400
+
+@app.route("/user-get-light-mode", methods = ["POST"])
+@cross_origin()
+def getLightMode():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            lightMode = mySession.query(Preferences.lightMode).filter_by(email = email).first()[0]
+            return jsonify({'lightMode' : lightMode})
+        else:
+            return jsonify("[/user-get-light-mode] Referencing email already has no entry in 'PREFERENCES"), 400
+    else:
+        return jsonify("[/user-get-light-mode] No user with this email exists in the database"), 400
+
+@app.route("/user-get-do-animation", methods = ["POST"])
+@cross_origin()
+def getDoAnimation():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            doAnimation = mySession.query(Preferences.doAnimation).filter_by(email = email).first()[0]
+            return jsonify({'doAnimation' : doAnimation})
+        else:
+            return jsonify("[/user-get-do-animation] Referencing email already has no entry in 'PREFERENCES"), 400
+    else:
+        return jsonify("[/user-get-do-animation] No user with this email exists in the database"), 400
+
 ### FAVORITES FUNCTIONS ###########################################################################
 @app.route("/user-update-favorites", methods = ["POST"])
 @cross_origin()
@@ -286,6 +359,7 @@ def updateFavorites():
     else:
         return jsonify("[/user-update-favorites] No user with this email exists in the database"), 404
 
+### SESSION FUNCTIONS #############################################################################
 @app.route("/validate-user", methods = ["POST"])
 @cross_origin()
 def validateUser():
@@ -305,6 +379,13 @@ def validateUser():
     else:
         return jsonify("[/validate-user] No user with this email exists"), 401
 
+@app.route("/session-get-data", methods = ["GET"])
+def getSessionData():
+    if "email" in session:
+        return session["email"]
+    else:
+        return jsonify("No email in session"), 404
+    
 ### QUOTES FUNCTIONS ##############################################################################
 @app.route("/user-quote/<email>", methods = ["GET"])
 def getQuote(email):
@@ -327,10 +408,3 @@ def getQuote(email):
         print(response.text)
     else:
         print("Error:", response.status_code, response.text)
-
-@app.route("/session-get-data", methods = ["GET"])
-def getSessionData():
-    if "email" in session:
-        return session["email"]
-    else:
-        return jsonify("No email in session"), 404
