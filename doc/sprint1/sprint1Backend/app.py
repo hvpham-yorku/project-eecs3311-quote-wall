@@ -408,3 +408,4 @@ def getQuote(email):
         print(response.text)
     else:
         print("Error:", response.status_code, response.text)
+        
