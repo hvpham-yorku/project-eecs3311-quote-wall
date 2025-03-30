@@ -1,5 +1,5 @@
 ### IMPORTS #######################################################################################
-import os, sqlalchemy, warnings, random, requests
+import os, sqlalchemy, warnings, random, requests, json
 from flask import Flask, request, jsonify, Response, session
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
@@ -16,7 +16,7 @@ warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
 SECRET_KEY = os.getenv("SECRET_KEY")
-api_key = os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")
 
 class Base(DeclarativeBase):
     pass
@@ -99,7 +99,7 @@ def createUser():
         return jsonify("[/create-user] Successfully created user")
     except UserDataException as e:
         removeUser()
-        return jsonify("[/create-user] An error occurred while trying to create the user:{}".format(e)), 400
+        return jsonify("[/create-user] An error occurred while trying to create the user: {}".format(e)), 400
 
 def addUser(email, password, userName):
     Session = sessionmaker(bind = engine)
@@ -229,7 +229,7 @@ def updatePreferences():
         toggleAnimation(email)
         return jsonify("[/user-update-preferences] Successfully updated user preferences")
     except UserDataException as e:
-        return jsonify("[/user-update-preferences] An error occurred while trying to update preferences:{}".format(e)), 400
+        return jsonify("[/user-update-preferences] An error occurred while trying to update preferences: {}".format(e)), 400
     
 def updateTextSize(email, newTextSize):
     Session = sessionmaker(bind = engine)
@@ -475,24 +475,12 @@ def getSessionData():
         return jsonify("No email in session"), 404
     
 ### QUOTES FUNCTIONS ##############################################################################
-@app.route("/user-quote/<email>", methods = ["GET"])
-def getQuote(email):
-    Session = sessionmaker(bind=engine)
-    mySession = Session()
-
-    userGenres = mySession.query(Genres).filter_by(email=email).first()
-    if not userGenres or not userGenres.genres:
-        print("User is not found")
-    
-    valid = [i for i in userGenres.genres if i]
-    genre = random.choice(valid) if valid else None
-    if not genre:
-        print("No genres selected")
-
-    api_url = 'https://api.api-ninjas.com/v1/quotes?category={genre}'
-    response = requests.get(api_url, headers={'X-Api-Key' : api_key})
-
+@app.route("/get-quote-generic", methods = ["GET"])
+def getQuoteGeneric():
+    api_url = 'https://api.api-ninjas.com/v1/quotes'
+    response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
     if response.status_code == requests.codes.ok:
-        print(response.text)
+        data = json.loads(response.text)
+        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
-        print("Error:", response.status_code, response.text)
+        return f"Error: {response.status_code} {response.text}"
