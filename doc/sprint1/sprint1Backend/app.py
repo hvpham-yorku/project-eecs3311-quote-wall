@@ -211,6 +211,23 @@ def updateGenres():
     else:
         return jsonify("[/user-update-genres] No user with this email exists in the database"), 404
 
+@app.route("/user-get-genres", methods = ["POST"])
+@cross_origin()
+def getGenres():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+    
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Genres.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'FAVORITES'
+            return jsonify(mySession.query(Genres.genres).filter_by(email=email).first()[0])
+        else:
+            return jsonify("[/user-get-genres] Referencing email already has no entry in 'GENRES'"), 400
+    else:
+        return jsonify("[/user-get-genres] No user with this email exists in the database"), 404
+    
 ### PREFERENCES FUNCTIONS #########################################################################
 @app.route("/user-update-preferences", methods = ["POST"])
 @cross_origin()
@@ -418,6 +435,23 @@ def removeFromFavorites():
             return jsonify("[/user-remove-from-favorites] Referencing email already has no entry in 'FAVORITES'"), 400
     else:
         return jsonify("[/user-remove-from-favorites] No user with this email exists in the database"), 404
+    
+@app.route("/user-get-favorites", methods = ["POST"])
+@cross_origin()
+def getFavorites():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+    
+    if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Favorites.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'FAVORITES'
+            return jsonify(mySession.query(Favorites.quotes).filter_by(email=email).first()[0])
+        else:
+            return jsonify("[/user-get-favorites] Referencing email already has no entry in 'FAVORITES'"), 400
+    else:
+        return jsonify("[/user-get-favorites] No user with this email exists in the database"), 404
 
 ### RECENCY FUNCTIONS #############################################################################
 @app.route("/user-add-to-recents", methods = ["POST"])
