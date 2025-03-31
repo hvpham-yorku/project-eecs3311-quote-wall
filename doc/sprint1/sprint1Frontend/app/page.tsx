@@ -41,6 +41,22 @@ const allGenres = [
   { id: "nature", name: "Nature", icon: Leaf },
 ];
 
+const handleAIGenerated = async () => {
+  try {
+    const res = await fetch("http://localhost:5000/ai-quote");
+    const data = await res.json();
+
+    if (data.quote) {
+      alert(`AI Quote:\n\n"${data.quote}"`);
+    } else {
+      alert("Error generating quote. Try again.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong contacting the AI.");
+  }
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]); // Store multiple selected genres
@@ -175,9 +191,7 @@ export default function HomePage() {
 
           <Button
             className="px-8 py-6 text-lg rounded-full transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700"
-            onClick={() => {
-              //handleAIGenerated();
-            }}
+            onClick={() => handleAIGenerated()}
           >
             AI Generated Quote
             <Sparkles className="ml-2 h-5 w-5" />

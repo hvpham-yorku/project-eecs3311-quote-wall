@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, String, Integer, Boolean, ForeignKey, inse
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import exists, select
 from dotenv import load_dotenv
+import openai
 warnings.simplefilter("default")
 warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 
@@ -387,24 +388,45 @@ def getSessionData():
         return jsonify("No email in session"), 404
     
 ### QUOTES FUNCTIONS ##############################################################################
-@app.route("/user-quote/<email>", methods = ["GET"])
-def getQuote(email):
-    Session = sessionmaker(bind=engine)
-    mySession = Session()
+# @app.route("/user-quote/<email>", methods = ["GET"])
+# def getQuote(email):
+#     Session = sessionmaker(bind=engine)
+#     mySession = Session()
 
-    userGenres = mySession.query(Genres).filter_by(email=email).first()
-    if not userGenres or not userGenres.genres:
-        print("User is not found")
+#     userGenres = mySession.query(Genres).filter_by(email=email).first()
+#     if not userGenres or not userGenres.genres:
+#         print("User is not found")
     
-    valid = [i for i in userGenres.genres if i]
-    genre = random.choice(valid) if valid else None
-    if not genre:
-        print("No genres selected")
+#     valid = [i for i in userGenres.genres if i]
+#     genre = random.choice(valid) if valid else None
+#     if not genre:
+#         print("No genres selected")
 
-    api_url = 'https://api.api-ninjas.com/v1/quotes?category={genre}'
-    response = requests.get(api_url, headers={'X-Api-Key' : api_key})
+#     api_url = 'https://api.api-ninjas.com/v1/quotes?category={genre}'
+#     response = requests.get(api_url, headers={'X-Api-Key' : api_key})
 
-    if response.status_code == requests.codes.ok:
-        print(response.text)
-    else:
-        print("Error:", response.status_code, response.text)
+#     if response.status_code == requests.codes.ok:
+#         print(response.text)
+#     else:
+#         print("Error:", response.status_code, response.text)
+
+
+### AI FUNCTIONS ##############################################################################
+openai.api_key = os.getenv("OPENAI_API_KEY")
+@app.route("/ai-quote", methods=["GET"])
+def ai_quote():
+    prompt = "Generate an original, short inspirational quote (1–2 sentences)."
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                { "role": "user", "content": prompt }
+            ],
+            temperature=0.8,
+            max_tokens=60,
+        )
+        quote = response.choices[0].message["content"].strip()
+        return jsonify({ "quote": quote })
+    except Exception as e:
+        return jsonify({ "error": str(e) }), 500
+
