@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {BookText,
@@ -160,7 +161,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center space-y-4">
           <Button
             size="lg"
             onClick={handleContinue}
@@ -168,6 +169,18 @@ export default function HomePage() {
             className="px-8 py-6 text-lg rounded-full transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700"
           >
             Continue <ChevronRight className="ml-2 h-5 w-5" />
+          </Button>
+
+          <span className="text-muted-foreground text-lg font-medium">or</span>
+
+          <Button
+            className="px-8 py-6 text-lg rounded-full transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700"
+            onClick={() => {
+              //handleAIGenerated();
+            }}
+          >
+            AI Generated Quote
+            <Sparkles className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </main>
