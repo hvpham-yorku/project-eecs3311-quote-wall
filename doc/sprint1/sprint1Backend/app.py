@@ -571,3 +571,4 @@ def getQuoteByGenre():
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
     else:
         return f"Error: {response.status_code} {response.text}"
+    
