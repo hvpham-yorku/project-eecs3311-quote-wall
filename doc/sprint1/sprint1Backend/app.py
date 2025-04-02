@@ -519,3 +519,23 @@ def getQuoteGeneric():
     else:
         return f"Error: {response.status_code} {response.text}"
     
+@app.route("/get-quote-by-genre", methods=["POST"])
+@cross_origin()
+def getQuoteByGenre():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind=engine)
+    mySession = Session()
+
+    user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
+    genre = random.choice(user_genres[0])
+    
+    api_url = f'https://api.api-ninjas.com/v1/quotes?category={genre}'
+    response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
+
+    if response.status_code == requests.codes.ok:
+        data = json.loads(response.text)
+        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
+    else:
+        return f"Error: {response.status_code} {response.text}"
