@@ -134,7 +134,7 @@ def addPreferences(email):
 
     if(mySession.query(User.email).filter_by(email=email).first() is not None): #Check if the user has an entry in 'USER'
         if(mySession.query(Preferences.email).filter_by(email=email).first() is None): #Check if the user has an entry in 'PREFERENCES'
-            newPreferences = Preferences(email = email, textSize = 50, cycleQuotes = True, quoteDelay = 60, lightMode = True, doAnimation = True)
+            newPreferences = Preferences(email = email, textSize = 100, cycleQuotes = True, quoteDelay = 60, lightMode = True, doAnimation = True)
             mySession.add(newPreferences)
             mySession.commit()
             return"[addPreferences] Successfully added preferences"
@@ -238,12 +238,14 @@ def updatePreferences():
     quoteDelay = data["quoteDelay"]
     lightMode = data["lightMode"]
     doAnimation = data["doAnimation"]
+    cycleQuotes = data["cycleQuotes"]
 
     try:
         updateTextSize(email, textSize)
         updateQuoteDelay(email, quoteDelay)
-        toggleLightMode(email)
-        toggleAnimation(email)
+        updateLightMode(email, lightMode)
+        updateAnimation(email, doAnimation)
+        updateQuoteCycle(email, cycleQuotes)
         return jsonify("[/user-update-preferences] Successfully updated user preferences")
     except UserDataException as e:
         return jsonify("[/user-update-preferences] An error occurred while trying to update preferences: {}".format(e)), 400
@@ -276,35 +278,47 @@ def updateQuoteDelay(email, newQuoteDelay):
     else:
         raise UserDataException("[/user-update-quoteDelay] No user with this email exists in the database")
     
-def toggleLightMode(email):
+def updateLightMode(email, lightMode):
     Session = sessionmaker(bind = engine)
     mySession = Session()
 
     if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
         if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            inverse = False if (mySession.query(Preferences.lightMode).filter_by(email = email).first()[0] == True) else True
-            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.lightMode: inverse})
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.lightMode: lightMode})
             mySession.commit()
-            return"[/user-toggle-lightMode] Successfully toggled light mode"
+            return"[/user-update-lightMode] Successfully updated light mode"
         else:
-            raise UserDataException("[/user-toggle-lightMode] Referencing email already has no entry in 'PREFERENCES'")
+            raise UserDataException("[/user-update-lightMode] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        raise UserDataException("[/user-toggle-lightMode] No user with this email exists in the database")
+        raise UserDataException("[/user-update-lightMode] No user with this email exists in the database")
 
-def toggleAnimation(email):
+def updateAnimation(email, doAnimation):
     Session = sessionmaker(bind = engine)
     mySession = Session()
 
     if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
         if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
-            inverse = False if (mySession.query(Preferences.doAnimation).filter_by(email = email).first()[0] == True) else True
-            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: inverse})
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: doAnimation})
             mySession.commit()
-            return"[/user-toggle-animation] Successfully toggled animations"
+            return"[/user-toggle-animation] Successfully update animations"
         else:
-            raise UserDataException("[/user-toggle-animation] Referencing email already has no entry in 'PREFERENCES'")
+            raise UserDataException("[/user-update-animation] Referencing email already has no entry in 'PREFERENCES'")
     else:
-        raise UserDataException("[/user-toggle-animation] No user with this email exists in the database")
+        raise UserDataException("[/user-update-animation] No user with this email exists in the database")
+    
+def updateQuoteCycle(email, cycleQuotes):
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.cycleQuotes: cycleQuotes})
+            mySession.commit()
+            return"[/user-update-quote-cycle] Successfully update quote cycling"
+        else:
+            raise UserDataException("[/user-update-quote-cycle] Referencing email already has no entry in 'PREFERENCES'")
+    else:
+        raise UserDataException("[/user-update-quote-cycle] No user with this email exists in the database")
 
 ### PREFERENCES GETTER FUNCTIONS ##################################################################
 @app.route("/user-get-text-size", methods = ["POST"])
@@ -378,6 +392,24 @@ def getDoAnimation():
             return jsonify("[/user-get-do-animation] Referencing email already has no entry in 'PREFERENCES"), 400
     else:
         return jsonify("[/user-get-do-animation] No user with this email exists in the database"), 400
+    
+@app.route("/user-get-cycle-quotes", methods = ["POST"])
+@cross_origin()
+def getCycleQuotes():
+    data = request.get_json()
+    email = data["email"]
+
+    Session = sessionmaker(bind = engine)
+    mySession = Session()
+
+    if(mySession.query(User.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'USER'
+        if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
+            cycleQuotes = mySession.query(Preferences.cycleQuotes).filter_by(email = email).first()[0]
+            return jsonify({'cycleQuotes' : cycleQuotes})
+        else:
+            return jsonify("[/user-get-cycle-quotes] Referencing email already has no entry in 'PREFERENCES"), 400
+    else:
+        return jsonify("[/user-get-cycle-quotes] No user with this email exists in the database"), 400
 
 ### FAVORITES FUNCTIONS ###########################################################################
 @app.route("/user-add-to-favorites", methods = ["POST"])
