@@ -300,7 +300,7 @@ def updateAnimation(email, doAnimation):
         if(mySession.query(Preferences.email).filter_by(email = email).first() is not None): #Check if the user has an entry in 'PREFERENCES'
             mySession.query(Preferences).filter(Preferences.email == email).update({Preferences.doAnimation: doAnimation})
             mySession.commit()
-            return"[/user-toggle-animation] Successfully update animations"
+            return"[/user-update-animation] Successfully update animations"
         else:
             raise UserDataException("[/user-update-animation] Referencing email already has no entry in 'PREFERENCES'")
     else:
