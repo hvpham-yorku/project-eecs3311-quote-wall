@@ -550,4 +550,3 @@ def getQuoteGeneric():
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
         return f"Error: {response.status_code} {response.text}"
-    
