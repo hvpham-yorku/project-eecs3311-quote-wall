@@ -117,8 +117,9 @@ export default function QuotesPage() {
   const [isChanging, setIsChanging] = useState(false)
   const [floatingEnabled, setFloatingEnabled] = useState(true)
   const { data: session, status } = useSession()
-
   const [useAIQuote, setUseAIQuote] = useState(!!searchParams.get("aiQuote"))
+  const [backgroundTheme, setBackgroundTheme] = useState("default");
+
 
   // **Fix: Ensure hooks always run in the same order**
   useEffect(() => {
@@ -190,7 +191,7 @@ export default function QuotesPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col bg-${backgroundTheme}`}>
       <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-10">
         <div className="container max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -236,7 +237,10 @@ export default function QuotesPage() {
 
       <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
         <div className="backdrop-blur-lg bg-background/80 border border-border rounded-full p-2 shadow-sm">
-          <BackgroundSelector />
+        <BackgroundSelector 
+          selectedTheme={backgroundTheme} 
+          onChangeTheme={setBackgroundTheme}
+        />
         </div>
       </div>
     </div>
