@@ -563,6 +563,12 @@ def getQuoteByGenre():
     Session = sessionmaker(bind=engine)
     mySession = Session()
 
+    if random.random() < 0.1:
+        favorite = mySession.query(Favorites.quotes).filter_by(email=email).first()
+        if favorite and favorite[0]:
+            quote = random.choice(favorite[0])
+            return jsonify({'quote' : quote})
+
     user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
     genre = random.choice(user_genres[0])
     
@@ -571,7 +577,7 @@ def getQuoteByGenre():
 
     if response.status_code == requests.codes.ok:
         data = json.loads(response.text)
-        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
+        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
         return f"Error: {response.status_code} {response.text}"
 
@@ -599,5 +605,4 @@ def ai_quote():
     except Exception as e:
         print("OpenAI error:", str(e))
         return jsonify({ "error": str(e) }), 500
-
 
