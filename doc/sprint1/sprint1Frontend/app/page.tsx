@@ -41,27 +41,42 @@ const allGenres = [
   { id: "nature", name: "Nature", icon: Leaf },
 ];
 
-const handleAIGenerated = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/ai-quote");
-    const data = await res.json();
-
-    if (data.quote) {
-      alert(`AI Quote:\n\n"${data.quote}"`);
-    } else {
-      alert("Error generating quote. Try again.");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong contacting the AI.");
-  }
-};
 
 export default function HomePage() {
   const router = useRouter();
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]); // Store multiple selected genres
   const [showMore, setShowMore] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [aiQuote, setAiQuote] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
+  const handleAIGenerated = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/ai-quote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: customPrompt }),
+      });
+  
+      const data = await res.json();
+      if (data.quote) {
+        const quote = encodeURIComponent(data.quote);
+        const author = encodeURIComponent("AI");
+        router.push(`/quotes?aiQuote=${quote}&author=${author}`);
+      } else {
+        alert("Error generating quote. Try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong contacting the AI.");
+    } finally {
+      setLoading(false);
+    }
+  }; 
+  
   const toggleGenreSelection = (id: string) => {
     setSelectedGenres((prevSelected) =>
       prevSelected.includes(id)
@@ -189,14 +204,24 @@ export default function HomePage() {
 
           <span className="text-muted-foreground text-lg font-medium">or</span>
 
+          <textarea
+            value={customPrompt}
+            onChange={(e) => setCustomPrompt(e.target.value)}
+            placeholder="Enter your own prompt for AI to generate a quote..."
+            rows={3}
+            className="w-full p-4 rounded-xl border border-border bg-background resize-none shadow-sm focus:outline-none focus:ring focus:ring-primary"
+          />
+
           <Button
+            onClick={handleAIGenerated}
+            disabled={!customPrompt.trim()}
             className="px-8 py-6 text-lg rounded-full transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700"
-            onClick={() => handleAIGenerated()}
           >
-            AI Generated Quote
+            Generate Quote from Prompt
             <Sparkles className="ml-2 h-5 w-5" />
           </Button>
         </div>
+
       </main>
 
       {/* Settings sidebar (fixed position) */}

@@ -155,8 +155,8 @@ export default function CloudQuote({ quote, onRefresh, isChanging, genre }: Clou
 
         {quote && (
           <div className="text-center">
-            <blockquote className="mb-6">
-              <p className="font-serif leading-relaxed" style={{ fontSize: "var(--quote-font-size, 100%) " }}>
+            <blockquote className="mb-5 mt-10">
+              <p className="font-serif leading-relaxed" style={{ fontSize: "var(--quote-font-size, 100%)" }}>
                 "{quote.text}"
               </p>
             </blockquote>

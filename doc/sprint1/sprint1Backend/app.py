@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import exists, select
 from dotenv import load_dotenv
 import openai
+from openai import OpenAI
 warnings.simplefilter("default")
 warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 
@@ -18,6 +19,7 @@ load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
 SECRET_KEY = os.getenv("SECRET_KEY")
 api_key = os.getenv("API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class Base(DeclarativeBase):
     pass
@@ -412,12 +414,13 @@ def getSessionData():
 
 
 ### AI FUNCTIONS ##############################################################################
-openai.api_key = os.getenv("OPENAI_API_KEY")
-@app.route("/ai-quote", methods=["GET"])
+@app.route("/ai-quote", methods=["POST"])
 def ai_quote():
-    prompt = "Generate an original, short inspirational quote (1–2 sentences)."
+    data = request.get_json()
+    prompt = data.get("prompt", "Generate an original, short inspirational quote (1–2 sentences).")
     try:
-        response = openai.ChatCompletion.create(
+        print("Calling OpenAI with prompt:", prompt)
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 { "role": "user", "content": prompt }
@@ -425,8 +428,12 @@ def ai_quote():
             temperature=0.8,
             max_tokens=60,
         )
-        quote = response.choices[0].message["content"].strip()
+        quote = response.choices[0].message.content.strip()
         return jsonify({ "quote": quote })
     except Exception as e:
+        print("OpenAI error:", str(e))
         return jsonify({ "error": str(e) }), 500
+
+
+
 
