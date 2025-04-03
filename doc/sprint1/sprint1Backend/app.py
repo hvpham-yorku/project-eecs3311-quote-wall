@@ -562,12 +562,16 @@ def getQuoteGeneric():
 def getQuoteByGenre():
     data = request.get_json()
     email = data["email"]
+    genres = data.get("genres", [])  # array from frontend, default to empty list if not found
+
+    if not genres or len(genres) == 0:
+        return jsonify({"error": "No genres provided"}), 400
 
     Session = sessionmaker(bind=engine)
     mySession = Session()
 
-    user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
-    genre = random.choice(user_genres[0])
+    # user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
+    genre = random.choice(genres)
     
     api_url = f'https://api.api-ninjas.com/v1/quotes?category={genre}'
     response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
@@ -577,4 +581,3 @@ def getQuoteByGenre():
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
     else:
         return f"Error: {response.status_code} {response.text}"
-    

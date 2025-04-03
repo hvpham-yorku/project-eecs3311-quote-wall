@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import BackgroundSelector from "@/components/background-selector";
@@ -26,7 +25,7 @@ export default function QuotesPage() {
     text: string;
     author: string;
   } | null>(null);
-  const [isChanging, setIsChanging] = useState(false);
+  const [isChanging, setIsChanging] = useState(false); // Manage the changing state
   const [floatingEnabled, setFloatingEnabled] = useState(true);
   const { data: session, status } = useSession();
 
@@ -49,50 +48,62 @@ export default function QuotesPage() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const fetchQuote = async () => {
-      try {
-        const genre =
-          selectedGenres[Math.floor(Math.random() * selectedGenres.length)];
-        const response = await fetch(
-          `http://127.0.0.1:5000/user-quote/${session?.user?.email}?genre=${genre}`
-        );
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setCurrentQuote(data[0]);
-        } else {
-          console.error("No quote received:", data);
-        }
-      } catch (err) {
-        console.error("Error fetching quote:", err);
-      }
-    };
+  // Fetch the initial quote
+  const fetchQuote = async () => {
+    if (!session?.user?.email || selectedGenres.length === 0) return;
 
-    if (session?.user?.email && selectedGenres.length > 0) fetchQuote();
+    try {
+      const response = await fetch("http://127.0.0.1:5000/get-quote-by-genre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: session?.user?.email,
+          genres: selectedGenres, // send full array
+        }),
+      });
+
+      const data = await response.json();
+      if (data?.quote && data?.author) {
+        setCurrentQuote({ text: data.quote, author: data.author });
+      }
+    } catch (err) {
+      console.error("Error fetching quote:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user?.email && selectedGenres.length > 0) {
+      fetchQuote();
+    }
   }, [selectedGenres, session]);
 
+  // Fetch a new quote based on genre
   const getNewQuote = async () => {
     if (!session?.user?.email || selectedGenres.length === 0) return;
     setIsChanging(true);
 
     try {
-      const genre =
-        selectedGenres[Math.floor(Math.random() * selectedGenres.length)];
-      const response = await fetch(
-        `http://127.0.0.1:5000/user-quote/${session.user.email}?genre=${genre}`
-      );
+      const response = await fetch("http://127.0.0.1:5000/get-quote-by-genre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: session.user.email,
+          genres: selectedGenres, // send full array
+        }),
+      });
+
       const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setTimeout(() => {
-          setCurrentQuote(data[0]);
-          setIsChanging(false);
-        }, 500);
+      if (response.ok) {
+        setCurrentQuote({
+          text: data.quote,
+          author: data.author,
+        });
       } else {
         console.error("No quote received:", data);
-        setIsChanging(false);
       }
     } catch (err) {
       console.error("Error fetching quote:", err);
+    } finally {
       setIsChanging(false);
     }
   };
