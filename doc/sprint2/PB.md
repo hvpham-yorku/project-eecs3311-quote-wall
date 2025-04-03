@@ -54,9 +54,8 @@ Diana would like the following features added to the **Inspirational Quote Websi
 **“I want quotes to be accompanied by a relaxing or visually pleasing image, something nice to accompany the quote.”**
 
 **✅ Implementation Ideas:**
-- Display a background image or an image next to the quote.
-- Use APIs like Unsplash or Pexels for high-quality, relaxing visuals.
-- Option to turn the images on or off via settings.
+- Create different themes that create a relaxing/astethic view
+- Add a toggle/menu for the user to select from these themes.
 
 ---
 
