@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { X, Sliders, Type, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +29,40 @@ export default function SettingsPanel({ getNewQuote, setFloatingEnabled }: { get
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<SettingsType>(defaultSettings);
   const [quoteInterval, setQuoteInterval] = useState<NodeJS.Timeout | null>(null);
+  // const { data: session } = useSession();
+
+  // const handleSavePreferences = async () => {
+  //   if (!session?.user?.email) return;
+
+  //   try {
+  //     const res = await fetch("http://localhost:5000/update-preferences", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         email: session.user.email,
+  //         preferences: {
+  //           fontSize: settings.fontSize,
+  //           quoteDelay: settings.quoteDisplayTime,
+  //           lightMode: true,
+  //           doAnimation: settings.floatingAnimation,
+  //           cycleQuotes: settings.autoChangeQuotes,
+  //         },
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+  //     if (data.success) {
+  //       alert("Preferences saved!");
+  //     } else {
+  //       alert("Failed to save preferences.");
+  //     }
+  //   } catch (err) {
+  //     console.error("Save error:", err);
+  //     alert("Error saving preferences.");
+  //   }
+  // };
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -195,8 +230,21 @@ export default function SettingsPanel({ getNewQuote, setFloatingEnabled }: { get
 
                   <Separator />
 
+                  {/* Save Button */}
+                  <Button
+                    variant="default"
+                    className="w-full mb-2"
+                    //onClick={handleSavePreferences}
+                  >
+                    Save Preferences
+                  </Button>
+
                   {/* Reset Button */}
-                  <Button variant="outline" className="w-full" onClick={() => setSettings(defaultSettings)}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setSettings(defaultSettings)}
+                  >
                     Reset to Defaults
                   </Button>
                 </div>
