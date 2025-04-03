@@ -65,7 +65,7 @@ export default function HomePage() {
       if (data.quote) {
         const quote = encodeURIComponent(data.quote);
         const author = encodeURIComponent("AI");
-        router.push(`/quotes?aiQuote=${quote}&author=${author}`);
+        router.push(`/quotes?aiQuote=${quote}&author=${author}&prompt=${encodeURIComponent(customPrompt)}`);
       } else {
         alert("Error generating quote. Try again.");
       }

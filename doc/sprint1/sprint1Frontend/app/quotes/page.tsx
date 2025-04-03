@@ -107,6 +107,10 @@ export default function QuotesPage() {
     const genreParam = searchParams.get("genres")
     return genreParam ? genreParam.split(",") : []
   }, [searchParams])
+  const aiPrompt = useMemo(() => {
+    return searchParams.get("prompt") || "Generate short inspirational quote (1 sentence).";
+  }, [searchParams]);
+  
 
   const [currentTime, setCurrentTime] = useState("")
   const [currentQuote, setCurrentQuote] = useState<{ text: string; author: string } | null>(null)
@@ -159,7 +163,7 @@ export default function QuotesPage() {
           const res = await fetch("http://localhost:5000/ai-quote", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: "Generate an inspirational quote." })
+            body: JSON.stringify({ prompt: aiPrompt })
           })
           const data = await res.json()
           if (data.quote) {
@@ -210,6 +214,7 @@ export default function QuotesPage() {
 
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-12 md:py-20 flex items-center justify-center relative">
         <div className="translate-y-20 md:translate-y-28 max-w-[90%] text-center">
+        {!isChanging && currentQuote && (
           <CloudQuote 
             quote={currentQuote} 
             onRefresh={getNewQuote} 
@@ -217,6 +222,12 @@ export default function QuotesPage() {
             genre={selectedGenres.join(", ")} 
             className={floatingEnabled ? "floating-animation" : ""} 
           />
+        )}
+          {useAIQuote && (
+            <p className="text-muted-foreground mt-4 italic text-sm">
+              AI Prompt: <span className="font-medium">"{aiPrompt}"</span>
+            </p>
+          )}
         </div>
       </main>
 
