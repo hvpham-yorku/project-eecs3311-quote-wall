@@ -49,6 +49,8 @@ export default function HomePage() {
   const [customPrompt, setCustomPrompt] = useState("");
   const [aiQuote, setAiQuote] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [backgroundTheme, setBackgroundTheme] = useState("default");
+
 
   const handleAIGenerated = async () => {
     setLoading(true);
@@ -227,7 +229,10 @@ export default function HomePage() {
       {/* Settings sidebar (fixed position) */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
         <div className="backdrop-blur-lg bg-background/80 border border-border rounded-full p-2 shadow-sm">
-          <BackgroundSelector />
+        <BackgroundSelector
+          selectedTheme={backgroundTheme}
+          onChangeTheme={setBackgroundTheme}
+        />
         </div>
       </div>
     </div>

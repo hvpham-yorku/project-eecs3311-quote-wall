@@ -116,4 +116,23 @@
   }
 }
 
+@layer utilities {
+  .bg-default {
+    @apply bg-white dark:bg-black;
+  }
+  .bg-soft-blue {
+    background-color: #dbeafe; /* Tailwind's blue-100 */
+  }
+  .bg-warm-sunset {
+    background-color: #fed7aa; /* Tailwind's orange-200 */
+  }
+  .bg-cool-mint {
+    background-color: #d1fae5; /* Tailwind's emerald-100 */
+  }
+  .bg-purple-haze {
+    background-color: #ede9fe; /* Tailwind's purple-100 */
+  }
+}
+
+
 
