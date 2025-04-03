@@ -489,12 +489,7 @@ def getFavorites():
         return jsonify("[/user-get-favorites] No user with this email exists in the database"), 404
 
 ### RECENCY FUNCTIONS #############################################################################
-@app.route("/user-add-to-recents", methods = ["POST"])
-def addToRecents():
-    data = request.get_json()
-    email = data["email"]
-    quote = data["quote"]
-
+def addToRecents(email, quote):
     Session = sessionmaker(bind = engine)
     mySession = Session()
 
@@ -544,12 +539,17 @@ def getSessionData():
         return jsonify("No email in session"), 404
     
 ### QUOTES FUNCTIONS ##############################################################################
-@app.route("/get-quote-generic", methods = ["GET"])
+@app.route("/get-quote-generic", methods = ["POST"])
+@cross_origin()
 def getQuoteGeneric():
+    data = request.get_json()
+    email = data["email"]
+
     api_url = 'https://api.api-ninjas.com/v1/quotes'
     response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
     if response.status_code == requests.codes.ok:
         data = json.loads(response.text)
+        addToRecents(email, data[0]['quote'])
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
         return f"Error: {response.status_code} {response.text}"
@@ -567,6 +567,7 @@ def getQuoteByGenre():
         favorite = mySession.query(Favorites.quotes).filter_by(email=email).first()
         if favorite and favorite[0]:
             quote = random.choice(favorite[0])
+            addToRecents(email, quote)
             return jsonify({'quote' : quote})
 
     user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
@@ -577,6 +578,7 @@ def getQuoteByGenre():
 
     if response.status_code == requests.codes.ok:
         data = json.loads(response.text)
+        addToRecents(email, data[0]['quote'])
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
         return f"Error: {response.status_code} {response.text}"
