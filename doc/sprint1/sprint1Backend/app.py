@@ -517,24 +517,30 @@ def addToRecents():
         return jsonify("[addToRecents] No user with this email exists in the database"), 404
 
 ### SESSION FUNCTIONS #############################################################################
-@app.route("/validate-user", methods = ["POST"])
+@app.route("/validate-user", methods=["POST"])
 @cross_origin()
 def validateUser():
     data = request.get_json()
     email = data["email"]
     password = data["password"]
 
-    Session = sessionmaker(bind = engine)
+    Session = sessionmaker(bind=engine)
     mySession = Session()
 
-    if(mySession.query(User.email).filter_by(email=email).first() is not None):
-        if(mySession.query(User.email).filter_by(email=email).first() is not None):
+    user = mySession.query(User).filter_by(email=email).first()
+
+    if user:
+        if user.password == password:
             session["email"] = email
-            return jsonify("[validate-user] Successfully logged in")
+            return jsonify({
+                "email": user.email,
+                "userName": user.userName
+            })
         else:
-            return jsonify("[/validate-user] Password is incorrect"), 401
+            return jsonify({"error": "Password is incorrect"}), 401
     else:
-        return jsonify("[/validate-user] No user with this email exists"), 401
+        return jsonify({"error": "No user with this email exists"}), 401
+
 
 @app.route("/session-get-data", methods = ["GET"])
 def getSessionData():
