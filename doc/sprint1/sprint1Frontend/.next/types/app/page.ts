@@ -1,4 +1,4 @@
-// File: G:\EECS3311Final Project\project-eecs3311-quote-wall\doc\sprint1\sprint1Frontend\app\page.tsx
+// File: C:\Users\quanp\OneDrive\Documents\School\York University\EECS3311\project-eecs3311-quote-wall\doc\sprint1\sprint1Frontend\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
