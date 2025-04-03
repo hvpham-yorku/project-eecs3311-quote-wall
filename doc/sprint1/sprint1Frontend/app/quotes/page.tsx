@@ -103,18 +103,22 @@ const quotesByGenre: Record<string, { text: string; author: string }[]> = {
 export default function QuotesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedGenres = useMemo(() => {
+    const genreParam = searchParams.get("genres")
+    return genreParam ? genreParam.split(",") : []
+  }, [searchParams])
+  const aiPrompt = useMemo(() => {
+    return searchParams.get("prompt") || "Generate short inspirational quote (1 sentence).";
+  }, [searchParams]);
+  
 
-  // **Fix: Ensure selectedGenres is always an array**
-  const selectedGenres = useMemo(
-    () => searchParams.get("genres")?.split(",") || ["sport"],
-    [searchParams]
-  );
+  const [currentTime, setCurrentTime] = useState("")
+  const [currentQuote, setCurrentQuote] = useState<{ text: string; author: string } | null>(null)
+  const [isChanging, setIsChanging] = useState(false)
+  const [floatingEnabled, setFloatingEnabled] = useState(true)
+  const { data: session, status } = useSession()
 
-  const [currentTime, setCurrentTime] = useState("");
-  const [currentQuote, setCurrentQuote] = useState<{ text: string; author: string } | null>(null);
-  const [isChanging, setIsChanging] = useState(false);
-  const [floatingEnabled, setFloatingEnabled] = useState(true);
-  const { data: session, status } = useSession();
+  const [useAIQuote, setUseAIQuote] = useState(!!searchParams.get("aiQuote"))
 
   // **Fix: Ensure hooks always run in the same order**
   useEffect(() => {
@@ -124,46 +128,66 @@ export default function QuotesPage() {
   }, [status, router]);
 
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    const now = new Date()
+    setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
+    const interval = setInterval(() => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   // **Fix: Use useMemo to avoid unnecessary re-renders**
-  const mergedQuotes = useMemo(
-    () => selectedGenres.flatMap((genre) => quotesByGenre[genre] || []),
-    [selectedGenres]
-  );
+  const mergedQuotes = useMemo(() => {
+    return selectedGenres.flatMap((genre) => quotesByGenre[genre] || [])
+  }, [selectedGenres])
 
   useEffect(() => {
-    if (mergedQuotes.length > 0) {
-      setCurrentQuote(mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)]);
+    const aiQuoteText = searchParams.get("aiQuote")
+    const aiQuoteAuthor = searchParams.get("author") || "AI"
+
+    if (aiQuoteText) {
+      setCurrentQuote({ text: decodeURIComponent(aiQuoteText), author: decodeURIComponent(aiQuoteAuthor) })
+      setUseAIQuote(true)
+    } else if (mergedQuotes.length > 0) {
+      setCurrentQuote(mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)])
+      setUseAIQuote(false)
     }
-  }, [mergedQuotes]);
+  }, [mergedQuotes, searchParams])
 
-  const getNewQuote = () => {
-    if (mergedQuotes.length === 0) return;
-    setIsChanging(true);
-
-    setTimeout(() => {
-      let newQuote;
-      do {
-        newQuote = mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)];
-      } while (newQuote?.text === currentQuote?.text && mergedQuotes.length > 1);
-
-      setCurrentQuote(newQuote);
-      setIsChanging(false);
-    }, 500);
-  };
+  const getNewQuote = async () => {
+    setIsChanging(true)
+    setTimeout(async () => {
+      if (useAIQuote) {
+        try {
+          const res = await fetch("http://localhost:5000/ai-quote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: aiPrompt })
+          })
+          const data = await res.json()
+          if (data.quote) {
+            setCurrentQuote({ text: data.quote, author: "AI" })
+          } else {
+            alert("Failed to fetch AI quote")
+          }
+        } catch (err) {
+          alert("Error calling AI quote API")
+        }
+      } else {
+        let newQuote
+        do {
+          newQuote = mergedQuotes[Math.floor(Math.random() * mergedQuotes.length)]
+        } while (newQuote?.text === currentQuote?.text && mergedQuotes.length > 1)
+        setCurrentQuote(newQuote)
+      }
+      setIsChanging(false)
+    }, 500)
+  }
 
   const goBack = () => {
-    router.push("/");
-  };
+    router.push("/")
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -188,15 +212,27 @@ export default function QuotesPage() {
         </div>
       </header>
 
-      <main className="flex-1 container max-w-5xl mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
-        <CloudQuote 
-          quote={currentQuote} 
-          onRefresh={getNewQuote} 
-          isChanging={isChanging} 
-          genre={selectedGenres.join(", ")} // Display multiple genres
-          className={floatingEnabled ? "floating-animation" : ""} 
-        />
+      <main className="flex-1 container max-w-5xl mx-auto px-4 py-12 md:py-20 flex items-center justify-center relative">
+        <div className="translate-y-20 md:translate-y-28 max-w-[90%] text-center">
+        {!isChanging && currentQuote && (
+          <CloudQuote 
+            quote={currentQuote} 
+            onRefresh={getNewQuote} 
+            isChanging={isChanging} 
+            genre={selectedGenres.join(", ")} 
+            className={floatingEnabled ? "floating-animation" : ""} 
+          />
+        )}
+          {useAIQuote && (
+            <p className="text-muted-foreground mt-4 italic text-sm">
+              AI Prompt: <span className="font-medium">"{aiPrompt}"</span>
+            </p>
+          )}
+        </div>
       </main>
+
+
+
 
       <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
         <div className="backdrop-blur-lg bg-background/80 border border-border rounded-full p-2 shadow-sm">

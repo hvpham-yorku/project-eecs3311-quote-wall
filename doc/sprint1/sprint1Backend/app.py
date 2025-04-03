@@ -9,6 +9,8 @@ from sqlalchemy import create_engine, String, Integer, Boolean, ForeignKey, inse
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import exists, select
 from dotenv import load_dotenv
+import openai
+from openai import OpenAI
 warnings.simplefilter("default")
 warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 
@@ -16,6 +18,7 @@ warnings.simplefilter("ignore", category=exc.LegacyAPIWarning)
 load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
 SECRET_KEY = os.getenv("SECRET_KEY")
+CLIENT = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 API_KEY = os.getenv("API_KEY")
 
 class Base(DeclarativeBase):
@@ -571,4 +574,30 @@ def getQuoteByGenre():
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
     else:
         return f"Error: {response.status_code} {response.text}"
-    
+
+
+### AI FUNCTIONS ##############################################################################
+@app.route("/ai-quote", methods=["POST"])
+def ai_quote():
+    data = request.get_json()
+    user_prompt = data.get("prompt", "life").strip()
+
+    full_prompt = f"""Generate an inspirational quote about topic: "{user_prompt}", generate a single, complete inspirational quote that is exactly 1–2 sentences long and ends with proper punctuation. Do not explain or add extra context—just return the quote itself. Do not repeat the same quote"""
+
+    try:
+        print("Calling OpenAI with prompt:", full_prompt)
+        response = CLIENT.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                { "role": "user", "content": full_prompt }
+            ],
+            temperature=0.8,
+            max_tokens=80, 
+        )
+        quote = response.choices[0].message.content.strip()
+        return jsonify({ "quote": quote })
+    except Exception as e:
+        print("OpenAI error:", str(e))
+        return jsonify({ "error": str(e) }), 500
+
+
