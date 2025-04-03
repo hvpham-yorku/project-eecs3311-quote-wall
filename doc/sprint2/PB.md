@@ -12,18 +12,6 @@ Bart would like the following features added to the **Inspirational Quote Websit
 - Play the sound when a new quote is displayed.
 - Include a toggle switch in the settings to **enable/disable** the sound cue.
 
----
-
-## 🕒 Display Date and Time  
-**“I want the option to display additional information such as the date and time alongside the quote.”**
-
-**✅ Implementation Ideas:**
-- Show the current date and time beneath each quote.
-- Use JavaScript’s `Date()` object to fetch and format the time.
-- Add a user setting to toggle **date/time visibility**.
-
----
-
 ## 🤖 AI-Generated Quotes from Prompt  
 **“I want to get AI-generated quotes based on my prompt.”**
 
