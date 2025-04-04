@@ -4,14 +4,6 @@ Bart would like the following features added to the **Inspirational Quote Websit
 
 ---
 
-## 🔊 Sound Cue on New Quote  
-**“I want an option for the website to play a sound cue when a new quote is given, so I know when something has changed.”**
-
-**✅ Implementation Ideas:**
-- Add a sound file (e.g., `ping.mp3`) to the project assets.
-- Play the sound when a new quote is displayed.
-- Include a toggle switch in the settings to **enable/disable** the sound cue.
-
 ## 🤖 AI-Generated Quotes from Prompt  
 **“I want to get AI-generated quotes based on my prompt.”**
 
