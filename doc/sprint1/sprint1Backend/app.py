@@ -545,17 +545,12 @@ def getSessionData():
         return jsonify("No email in session"), 404
     
 ### QUOTES FUNCTIONS ##############################################################################
-@app.route("/get-quote-generic", methods = ["POST"])
-@cross_origin()
+@app.route("/get-quote-generic", methods = ["GET"])
 def getQuoteGeneric():
-    data = request.get_json()
-    email = data["email"]
-
     api_url = 'https://api.api-ninjas.com/v1/quotes'
     response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
     if response.status_code == requests.codes.ok:
         data = json.loads(response.text)
-        addToRecents(email, data[0]['quote'])
         return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
     else:
         return f"Error: {response.status_code} {response.text}"
@@ -565,29 +560,26 @@ def getQuoteGeneric():
 def getQuoteByGenre():
     data = request.get_json()
     email = data["email"]
+    genres = data.get("genres", [])  # array from frontend, default to empty list if not found
+
+    if not genres or len(genres) == 0:
+        return jsonify({"error": "No genres provided"}), 400
 
     Session = sessionmaker(bind=engine)
     mySession = Session()
 
-    if random.random() < 0.1:
-        favorite = mySession.query(Favorites.quotes).filter_by(email=email).first()
-        if favorite and favorite[0]:
-            quote = random.choice(favorite[0])
-            addToRecents(email, quote)
-            return jsonify({'quote' : quote})
-
-    user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
-    genre = random.choice(user_genres[0])
+    # user_genres = mySession.query(Genres.genres).filter_by(email=email).first()
+    genre = random.choice(genres)
     
     api_url = f'https://api.api-ninjas.com/v1/quotes?category={genre}'
     response = requests.get(api_url, headers={'X-Api-Key': API_KEY})
 
     if response.status_code == requests.codes.ok:
         data = json.loads(response.text)
-        addToRecents(email, data[0]['quote'])
-        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author']})
+        return jsonify({'quote' : data[0]['quote'], 'author' : data[0]['author'], 'category' : data[0]['category']})
     else:
         return f"Error: {response.status_code} {response.text}"
+
 
 
 ### AI FUNCTIONS ##############################################################################
