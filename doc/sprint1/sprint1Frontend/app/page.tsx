@@ -3,21 +3,23 @@
 import { Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {BookText,
-  Brain,
-  ChevronRight,
-  Clock,
-  Cpu,
-  Film,
-  Gamepad2,
-  HeartPulse,
-  LandPlot,
-  Leaf,
-  Microscope,
-  Music,
+import {
+  Star,
+  Heart,
   Trophy,
+  Users,
+  Smile,
+  Zap,
+  Home,
+  Cloud,
+  Activity,
+  Crown,
+  BookOpen,
+  ChevronRight,
+  Leaf,
+  ChevronUp,
   ChevronDown,
-  ChevronUp} from "lucide-react";
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,18 +29,18 @@ import SettingsPanel from "@/components/settings-panel";
 import AuthButton from "@/components/auth-button";
 
 const allGenres = [
-  { id: "philosophy", name: "Philosophy", icon: Brain },
-  { id: "technology", name: "Technology", icon: Cpu },
-  { id: "history", name: "History", icon: Clock },
-  { id: "literature", name: "Literature", icon: BookText },
-  { id: "psychology", name: "Psychology", icon: HeartPulse },
-  { id: "politics", name: "Politics", icon: LandPlot },
-  { id: "sport", name: "Sport", icon: Trophy },
-  { id: "movie", name: "Movie", icon: Film },
-  { id: "music", name: "Music", icon: Music },
-  { id: "science", name: "Science", icon: Microscope },
-  { id: "videogames", name: "Video Games", icon: Gamepad2 },
-  { id: "nature", name: "Nature", icon: Leaf },
+  { id: "inspirational", name: "Inspirational", icon: Star },
+  { id: "life", name: "Life", icon: Leaf },
+  { id: "love", name: "Love", icon: Heart },
+  { id: "success", name: "Success", icon: Trophy },
+  { id: "friendship", name: "Friendship", icon: Users },
+  { id: "happiness", name: "Happiness", icon: Smile },
+  { id: "motivation", name: "Motivation", icon: Zap },
+  { id: "family", name: "Family", icon: Home },
+  { id: "dreams", name: "Dreams", icon: Cloud },
+  { id: "health", name: "Health", icon: Activity },
+  { id: "leadership", name: "Leadership", icon: Crown },
+  { id: "knowledge", name: "Knowledge", icon: BookOpen },
 ];
 
 
@@ -80,11 +82,15 @@ export default function HomePage() {
   }; 
   
   const toggleGenreSelection = (id: string) => {
-    setSelectedGenres((prevSelected) =>
-      prevSelected.includes(id)
-        ? prevSelected.filter((genre) => genre !== id) // Remove if already selected
-        : [...prevSelected, id] // Add if not selected
-    );
+    setSelectedGenres((prevSelected) => {
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter((genre) => genre !== id); // Deselect
+      } else if (prevSelected.length < 3) {
+        return [...prevSelected, id]; // Add if less than 3 selected
+      } else {
+        return prevSelected; // Do nothing if already 3 selected
+      }
+    });
   };
 
   const handleContinue = () => {
@@ -116,12 +122,15 @@ export default function HomePage() {
             The QuoteWall
           </h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-            Discover inspiring quotes from various genres to motivate and inspire your day.
+            Discover inspiring quotes from various genres to motivate and
+            inspire your day.
           </p>
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Select Genres</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">
+            Select Genres
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {allGenres.slice(0, 6).map((genre) => {
               const Icon = genre.icon;
@@ -138,10 +147,18 @@ export default function HomePage() {
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                     <Icon
                       className={`h-8 w-8 mb-2 ${
-                        selectedGenres.includes(genre.id) ? "text-primary" : "text-muted-foreground"
+                        selectedGenres.includes(genre.id)
+                          ? "text-primary"
+                          : "text-muted-foreground"
                       }`}
                     />
-                    <h3 className={`font-medium ${selectedGenres.includes(genre.id) ? "text-primary font-semibold" : ""}`}>
+                    <h3
+                      className={`font-medium ${
+                        selectedGenres.includes(genre.id)
+                          ? "text-primary font-semibold"
+                          : ""
+                      }`}
+                    >
                       {genre.name}
                     </h3>
                   </CardContent>
@@ -168,10 +185,18 @@ export default function HomePage() {
                     <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                       <Icon
                         className={`h-8 w-8 mb-2 ${
-                          selectedGenres.includes(genre.id) ? "text-primary" : "text-muted-foreground"
+                          selectedGenres.includes(genre.id)
+                            ? "text-primary"
+                            : "text-muted-foreground"
                         }`}
                       />
-                      <h3 className={`font-medium ${selectedGenres.includes(genre.id) ? "text-primary font-semibold" : ""}`}>
+                      <h3
+                        className={`font-medium ${
+                          selectedGenres.includes(genre.id)
+                            ? "text-primary font-semibold"
+                            : ""
+                        }`}
+                      >
                         {genre.name}
                       </h3>
                     </CardContent>
@@ -189,8 +214,13 @@ export default function HomePage() {
               onClick={() => setShowMore(!showMore)}
               className="px-6 py-4 text-lg flex items-center"
             >
-            {showMore ? "Show Less" : "Show More"} 
-            {showMore ? <ChevronUp className="ml-2 h-5 w-5" /> : <ChevronDown className="ml-2 h-5 w-5" />}            </Button>
+              {showMore ? "Show Less" : "Show More"}
+              {showMore ? (
+                <ChevronUp className="ml-2 h-5 w-5" />
+              ) : (
+                <ChevronDown className="ml-2 h-5 w-5" />
+              )}{" "}
+            </Button>
           </div>
         </div>
 

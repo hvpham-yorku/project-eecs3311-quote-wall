@@ -565,6 +565,10 @@ def getQuoteGeneric():
 def getQuoteByGenre():
     data = request.get_json()
     email = data["email"]
+    genres = data.get("genres", [])  # array from frontend, default to empty list if not found
+
+    if not genres or len(genres) == 0:
+        return jsonify({"error": "No genres provided"}), 400
 
     Session = sessionmaker(bind=engine)
     mySession = Session()
