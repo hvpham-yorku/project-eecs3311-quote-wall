@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo  } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
@@ -30,6 +30,7 @@ export default function QuotesPage() {
   const { data: session, status } = useSession()
   const [useAIQuote, setUseAIQuote] = useState(!!searchParams.get("aiQuote"))
   const [backgroundTheme, setBackgroundTheme] = useState("default");
+  const hasFetched = useRef(false);
 
   // **Fix: Ensure hooks always run in the same order**
   useEffect(() => {
@@ -49,17 +50,21 @@ export default function QuotesPage() {
   }, [])
 
   useEffect(() => {
-    const aiQuoteText = searchParams.get("aiQuote")
-    const aiQuoteAuthor = searchParams.get("author") || "AI"
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const aiQuoteText = searchParams.get("aiQuote");
+    const aiQuoteAuthor = searchParams.get("author") || "AI";
 
     if (aiQuoteText) {
-      setCurrentQuote({ text: decodeURIComponent(aiQuoteText), author: decodeURIComponent(aiQuoteAuthor) })
-      setUseAIQuote(true)
+      setCurrentQuote({ text: decodeURIComponent(aiQuoteText), author: decodeURIComponent(aiQuoteAuthor) });
+      setUseAIQuote(true);
     } else if (session?.user?.email && selectedGenres.length > 0) {
-      fetchQuoteByGenre()
-      setUseAIQuote(false)
+      fetchQuoteByGenre();
+      setUseAIQuote(false);
     }
-  }, [searchParams, selectedGenres, session])
+  }, [searchParams, selectedGenres, session]);
+
 
   const fetchQuoteByGenre = async () => {
     try {
